@@ -8,6 +8,15 @@
 불가능해서, 같은 구조(감정->카테고리 매핑, 카테고리별 퀘스트풀)로 새로 작성한 버전임.
 원본 문구와 100% 동일하지는 않음 (2026-09-07).
 """
+import uuid
+
+# quests 테이블에 저장할 때 쓰는 고정 UUID -- title이 같으면 항상 같은 id가 나옴
+# (2026-09-13: 퀘스트 완료/저장 기능 추가하면서 도입)
+_QUEST_NAMESPACE = uuid.UUID("2f6a1b00-0000-4000-8000-000000000000")
+
+
+def quest_uuid(title: str) -> str:
+    return str(uuid.uuid5(_QUEST_NAMESPACE, title))
 
 EMOTION_TO_QUEST_CATEGORY = {
     "분노": "휴식",

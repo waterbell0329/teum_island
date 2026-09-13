@@ -4,7 +4,7 @@
 - 카테고리 풀에서 2~3개를 랜덤 선택 (중복 없이)
 """
 import random
-from app.data.quest_bank import EMOTION_TO_QUEST_CATEGORY, get_quest_pool
+from app.data.quest_bank import EMOTION_TO_QUEST_CATEGORY, get_quest_pool, quest_uuid
 
 
 def get_routine_quests(
@@ -25,4 +25,4 @@ def get_routine_quests(
             pool = fresh_pool
 
     picked = random.sample(pool, k=min(count, len(pool)))
-    return [{**q, "category": category} for q in picked]
+    return [{**q, "category": category, "id": quest_uuid(q["title"])} for q in picked]

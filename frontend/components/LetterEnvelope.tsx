@@ -3,7 +3,7 @@
 // 편지 봉투. 두 군데서 씀: (1) 편지 도착 연출(arriving), (2) 편지함 목록 아이템(list)
 import { motion } from "framer-motion";
 
-const ENVELOPE_ASSET: string | null = null; // "/assets/icons/letter-envelope.png"
+const ENVELOPE_ASSET: string | null = "/assets/icons/letter-envelope.png";
 
 interface LetterEnvelopeProps {
   variant?: "arriving" | "list";

@@ -5,7 +5,7 @@
 // children으로 textarea(쓰기)든 편지 본문(읽기)이든 얹어서 씀.
 import type { ReactNode } from "react";
 
-const LETTER_PAPER_ASSET: string | null = null; // "/assets/icons/letter-paper.png"
+const LETTER_PAPER_ASSET: string | null = "/assets/icons/letter-paper.png";
 
 interface LetterPaperProps {
   children: ReactNode;

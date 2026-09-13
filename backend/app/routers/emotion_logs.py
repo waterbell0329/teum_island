@@ -11,6 +11,7 @@ from app.services import (
     db_service,
     quest_service,
 )
+from app.data.quest_bank import quest_uuid
 
 router = APIRouter()
 
@@ -41,6 +42,7 @@ def create_emotion_log(payload: EmotionLogCreateFreeText | EmotionLogCreateStruc
             new_level=user["level"],
             food_icon="none",
             today_quests=[{
+                "id": quest_uuid("괜찮아, 오늘은 쉬어도 돼"),
                 "title": "괜찮아, 오늘은 쉬어도 돼",
                 "description": "지금은 리스트보다 너를 돌보는 게 먼저야.",
                 "xp": 0, "duration": "-", "category": "휴식",
@@ -60,10 +62,16 @@ def create_emotion_log(payload: EmotionLogCreateFreeText | EmotionLogCreateStruc
     letter = letter_service.pick_letter(emotion, situation_category, intensity)
 
     # --- XP / 레벨 ---
-    xp_earned = xp_service.xp_for_record(intensity)
-    xp_result = xp_service.apply_xp(
-        current_level=user["level"], current_xp=user["current_xp"], earned_xp=xp_earned
-    )
+    # 0단계(튜토리얼, 온보딩 미완료)에서는 XP 시스템 자체를 적용하지 않음 (PROJECT_SUMMARY 9번 섹션)
+    is_tutorial = user["level"] < 1 or not user["onboarding_completed"]
+    if is_tutorial:
+        xp_earned = 0
+        xp_result = {"new_level": user["level"], "remaining_xp": user["current_xp"], "leveled_up": False}
+    else:
+        xp_earned = xp_service.xp_for_record(intensity)
+        xp_result = xp_service.apply_xp(
+            current_level=user["level"], current_xp=user["current_xp"], earned_xp=xp_earned
+        )
 
     log_row = db_service.insert_emotion_log(
         user_id=user_id,
@@ -81,10 +89,14 @@ def create_emotion_log(payload: EmotionLogCreateFreeText | EmotionLogCreateStruc
             "source": "structured",
         },
     )
-    db_service.update_user_xp_level(user_id, xp_result["new_level"], xp_result["remaining_xp"], xp_earned)
+    if not is_tutorial:
+        db_service.update_user_xp_level(user_id, xp_result["new_level"], xp_result["remaining_xp"], xp_earned)
 
-    # --- 루틴 퀘스트 선정 (규칙기반, AI 호출 없음) ---
+    # --- 루틴 퀘스트 선정 (규칙기반, AI 호출 없음) + DB에 배정 ---
     quests = quest_service.get_routine_quests(emotion, count=3, recent_quest_titles=None)
+    for q in quests:
+        db_service.upsert_quest(q["id"], q["title"], q["description"], q["category"], q["xp"])
+        db_service.assign_quest_to_user(user_id, q["id"])
 
     return EmotionLogResponse(
         id=log_row["id"],

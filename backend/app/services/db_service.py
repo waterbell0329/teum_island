@@ -17,8 +17,9 @@ def get_user(user_id: str) -> Optional[dict]:
 
 
 def get_or_create_user(user_id: str) -> dict:
-    """유저 조회, 없으면 기본값(레벨1, XP0, 온보딩 미완료)으로 새로 만듦.
-    emotion_logs 라우터가 매 요청마다 호출 -- 온보딩을 안 거쳤어도 기록 자체는 막히지 않게 방어.
+    """유저 조회, 없으면 기본값(레벨0=튜토리얼 중, XP0, 온보딩 미완료)으로 새로 만듦.
+    emotion_logs 라우터가 매 요청마다 호출 -- 온보딩을 안 거쳤어도 기록 자체는 막히지 않게 방어
+    (먹이주기 튜토리얼도 결국 이 경로를 타므로).
     주의: users.id는 auth.users를 참조하는 FK라서, 구글 로그인으로 실제 auth 유저가
     먼저 만들어져 있어야만 성공함 (없는 uuid로 호출하면 FK 위반 에러)."""
     user = get_user(user_id)
@@ -27,7 +28,7 @@ def get_or_create_user(user_id: str) -> dict:
     payload = {
         "id": user_id,
         "onboarding_completed": False,
-        "level": 1,
+        "level": 0,  # 0단계: 튜토리얼 중 (XP 시스템 미적용, PROJECT_SUMMARY 9번 섹션)
         "current_xp": 0,
         "total_xp": 0,
     }
@@ -35,16 +36,38 @@ def get_or_create_user(user_id: str) -> dict:
     return res.data[0]
 
 
-def complete_onboarding(user_id: str, nickname: str) -> dict:
-    """최초 유저 온보딩 완료 처리. 유저 행이 없으면 새로 만듦(구글 로그인 시 auth 트리거로
-    이미 만들어져 있는 게 이상적이지만, 없을 경우를 대비해 upsert로 방어)."""
+def save_nickname(user_id: str, nickname: str) -> dict:
+    """온보딩 1단계: 닉네임만 저장. 레벨/온보딩완료 여부는 안 건드림
+    (유저 행이 없으면 get_or_create_user와 같은 기본값으로 새로 만들면서 닉네임만 얹음)."""
     payload = {
         "id": user_id,
         "nickname": nickname,
-        "onboarding_completed": True,
-        "level": 1,
+        "onboarding_completed": False,
+        "level": 0,
         "current_xp": 0,
         "total_xp": 0,
+    }
+    existing = get_user(user_id)
+    if existing:
+        # 이미 있는 행이면 닉네임 말고는 기존 값(레벨 등) 건드리지 않음
+        res = get_supabase().table("users").update({"nickname": nickname}).eq("id", user_id).execute()
+    else:
+        res = get_supabase().table("users").insert(payload).execute()
+    return res.data[0]
+
+
+def complete_onboarding(user_id: str, pet_name: str) -> dict:
+    """온보딩 마지막 단계(먹이주기 튜토리얼 + 펫 이름짓기 이후): pet_name 저장,
+    onboarding_completed=true, level 0 -> 1 전환. 이미 1 이상이면 레벨은 그대로 둠
+    (재호출 방어 -- 실수로 두 번 눌러도 레벨이 다시 리셋되지 않게)."""
+    user = get_user(user_id)
+    current_level = user["level"] if user else 0
+    new_level = 1 if current_level < 1 else current_level
+    payload = {
+        "id": user_id,
+        "pet_name": pet_name,
+        "onboarding_completed": True,
+        "level": new_level,
     }
     res = get_supabase().table("users").upsert(payload).execute()
     return res.data[0]
@@ -177,13 +200,67 @@ def get_all_quests() -> list[dict]:
     return res.data or []
 
 
-def get_user_quests(user_id: str) -> list[dict]:
+def get_user_quests(user_id: str, incomplete_only: bool = False) -> list[dict]:
     """유저의 퀘스트 진행상황 + 퀘스트 상세정보 조인."""
+    q = get_supabase().table("user_quests").select("*, quests(*)").eq("user_id", user_id)
+    if incomplete_only:
+        q = q.eq("completed", False)
+    res = q.execute()
+    return res.data or []
+
+
+def upsert_quest(quest_id: str, title: str, description: str, category: str, xp_reward: int) -> dict:
+    """quest_bank.py의 퀘스트를 quests 테이블에 반영 (같은 title -> 같은 id라서 여러 번 불려도 안전)."""
+    payload = {
+        "id": quest_id,
+        "title": title,
+        "description": description,
+        "target_emotion_category": category,
+        "xp_reward": xp_reward,
+    }
+    res = get_supabase().table("quests").upsert(payload).execute()
+    return res.data[0]
+
+
+def assign_quest_to_user(user_id: str, quest_id: str) -> None:
+    """이미 배정(또는 완료)된 적 있으면 건드리지 않음 -- 완료된 걸 다시 미완료로 되돌리지 않기 위해."""
+    existing = (
+        get_supabase()
+        .table("user_quests")
+        .select("user_id")
+        .eq("user_id", user_id)
+        .eq("quest_id", quest_id)
+        .maybe_single()
+        .execute()
+    )
+    if existing and existing.data:
+        return
+    get_supabase().table("user_quests").insert(
+        {"user_id": user_id, "quest_id": quest_id, "progress": 0, "completed": False}
+    ).execute()
+
+
+def get_user_quest(user_id: str, quest_id: str) -> Optional[dict]:
     res = (
         get_supabase()
         .table("user_quests")
         .select("*, quests(*)")
         .eq("user_id", user_id)
+        .eq("quest_id", quest_id)
+        .maybe_single()
         .execute()
     )
-    return res.data or []
+    return res.data if res else None
+
+
+def complete_user_quest(user_id: str, quest_id: str) -> dict:
+    payload = {"completed": True, "completed_at": datetime.now(timezone.utc).isoformat()}
+    res = (
+        get_supabase()
+        .table("user_quests")
+        .update(payload)
+        .eq("user_id", user_id)
+        .eq("quest_id", quest_id)
+        .execute()
+    )
+    return res.data[0]

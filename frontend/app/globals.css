@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
+/* 틈 아일랜드 디자인 토큰 (CLAUDE_1.md 디자인 시스템 참고) --------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-main-green: #a8d5ba; /* 세이지 그린 */
+  --color-beige: #f5efe0; /* 따뜻한 아이보리 */
+  --color-brown: #b08968; /* 웜 브라운 */
+  --color-bg: #fffbf5; /* 크림 화이트 */
+  --color-yellow: #f6c453; /* 소프트 옐로우 */
+  --color-text: #4a3f35; /* 차콜 브라운 (순검정 대신) */
+  --color-safety: #e8a19c; /* 뮤트 코랄 (위기화면 전용) */
+
+  --shadow-soft: 0 4px 12px rgba(139, 111, 71, 0.08); /* 갈색톤 그림자, 순검정 금지 */
+
+  --radius-control: 16px; /* 버튼/입력창 */
+  --radius-card: 20px; /* 카드 */
+  --radius-badge: 12px; /* 작은 아이콘/뱃지 */
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-jua);
+  --font-hand: var(--font-gamja);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-jua), sans-serif;
+}
+
+/* 폰트: 편지본문/캐릭터이름/로고 3곳에만 Gamja Flower, 그 외 전부 Jua (CLAUDE_1.md 참고) */
+.font-hand {
+  font-family: var(--font-gamja), cursive;
+}
+
+/* 모바일 웹앱 프레임: 데스크톱에선 430px 폭으로 가운데 정렬, 모바일에선 꽉 채움 */
+.app-frame {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--color-bg);
+  position: relative;
+  box-shadow: var(--shadow-soft);
 }

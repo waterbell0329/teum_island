@@ -27,6 +27,7 @@ class EmotionLogCreateStructured(BaseModel):
 
 
 class RoutineQuest(BaseModel):
+    id: str  # quests 테이블에 저장되는 고정 UUID (title 기반, POST /quests/{id}/complete에 씀)
     title: str
     description: str
     xp: int

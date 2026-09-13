@@ -43,11 +43,16 @@ export interface EmotionLogCreateStructured {
 
 export type EmotionLogCreate = EmotionLogCreateFreeText | EmotionLogCreateStructured;
 
+// user_id를 아직 모르는 폼 단계(InputFlow)에서 쓰는 타입. Omit<유니온, K>은 각 분기별로
+// 따로 적용해야 함(유니온 전체에 바로 Omit하면 공통 키만 남아서 situation_category 등이 사라짐).
+export type EmotionLogSubmit = Omit<EmotionLogCreateFreeText, "user_id"> | Omit<EmotionLogCreateStructured, "user_id">;
+
 // ⚠️ 지금 백엔드는 공모전 공개 버전 기준으로 input_type: "free_text" 요청을 400으로 거부함
 // (자유텍스트 분류기(LoRA)가 이 환경에서 너무 느려서 공개 버전에서 뺌 -- PROJECT_SUMMARY 참고)
 // "편하게 쓰기" 입력 경로 UI를 보여줄지는 별도로 결정 필요.
 
 export interface RoutineQuest {
+  id: string; // quests 테이블 고정 UUID (POST /quests/{id}/complete에 씀)
   title: string;
   description: string;
   xp: number;
@@ -75,9 +80,46 @@ export function isCrisisResponse(res: EmotionLogResponse): boolean {
 export interface User {
   id: string;
   nickname: string | null;
+  pet_name: string | null;
   onboarding_completed: boolean;
   level: number;
   current_xp: number;
   total_xp: number;
   created_at: string;
+}
+
+// GET /users/{id}/recent-logs 응답 항목 (편지함 목록용)
+export interface EmotionLog {
+  id: string;
+  user_id: string;
+  emotion: Emotion;
+  intensity: Intensity | null;
+  raw_text: string | null;
+  letter_text: string;
+  xp_earned: number;
+  created_at: string;
+}
+
+// GET /quests/{user_id} 응답 항목 (user_quests + quests 조인)
+export interface UserQuest {
+  user_id: string;
+  quest_id: string;
+  progress: number;
+  completed: boolean;
+  completed_at: string | null;
+  quests: {
+    id: string;
+    title: string;
+    description: string;
+    target_emotion_category: string;
+    xp_reward: number;
+  };
+}
+
+// POST /quests/{quest_id}/complete 응답
+export interface QuestCompleteResult {
+  xp_earned: number;
+  leveled_up: boolean;
+  new_level: number;
+  user: User;
 }
