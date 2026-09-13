@@ -24,11 +24,9 @@ import { getOutfitForLevel } from "@/lib/outfits";
 import type { Emotion } from "@/types/emotion";
 
 export type CharacterAnimationState = "idle" | "listening" | "eating" | "celebrating";
-export type CharacterColor = "green" | "beige" | "brown";
 
 interface CharacterProps {
   animationState: CharacterAnimationState;
-  color?: CharacterColor;
   size?: number;
   /** eating 6단계 시퀀스가 다 끝나면 호출됨 (부모가 celebrating으로 넘기는 타이밍 등에 사용) */
   onEatingComplete?: () => void;
@@ -39,12 +37,9 @@ interface CharacterProps {
 }
 
 // --- 실제 아트 경로 (2026-09-12 반영) ------------------------------------------
-// green/brown 색상 파일은 아직 없어서 beige만 채움 (색상 선택 시 나머지 둘은 도형 placeholder).
-const BODY_ASSET: Record<CharacterColor, string | null> = {
-  green: null, // "/assets/character/body-green.png"
-  beige: "/assets/character/body-beige.png",
-  brown: null, // "/assets/character/body-brown.png"
-};
+// 캐릭터 색상 베리에이션은 안 하기로 확정 (2026-09-14) -- 이 캐릭터 하나로만 진행.
+const BODY_ASSET: string | null = "/assets/character/body-beige.png";
+const BODY_FALLBACK_COLOR = "#F5EFE0"; // 아이보리 -- 혹시 파일이 없을 때만 쓰는 도형 placeholder용
 const EYES_ASSET: string | null = "/assets/character/eyes.png";
 const EYES_HAPPY_ASSET: string | null = "/assets/character/eyes-happy.png"; // 감은(웃는) 눈, celebrating용
 const MOUTH_ASSET: Record<"closed" | "open", string | null> = {
@@ -56,12 +51,6 @@ const ARM_ASSET: Record<"down" | "reach", string | null> = {
   reach: "/assets/character/arm-reach.png",
 };
 const LEGS_ASSET: string | null = "/assets/character/legs.png";
-
-const BODY_COLOR_HEX: Record<CharacterColor, string> = {
-  green: "#A8D5BA", // 세이지 그린
-  beige: "#F5EFE0", // 아이보리
-  brown: "#B08968", // 웜 브라운
-};
 
 // 원본 시트에서 각 파츠의 실제 픽셀 크기 (all_parts.json). 몸통 너비 기준으로 전부 같은
 // 비율(scale)을 곱해서 배치 -> 실제 그림 비율 그대로 유지됨.
@@ -78,7 +67,6 @@ const NATIVE = {
 
 export default function Character({
   animationState,
-  color = "green",
   size = 160,
   onEatingComplete,
   foodEmotion,
@@ -179,7 +167,7 @@ export default function Character({
         variants={bodyVariants}
         animate={bodyState}
         style={
-          BODY_ASSET[color]
+          BODY_ASSET
             ? {
                 // 실제 사진(귀 튀어나온 불규칙 실루엣, 투명배경)은 도형 틀 없이 원본 비율 그대로
                 position: "absolute",
@@ -189,20 +177,20 @@ export default function Character({
                 marginTop: -bodyH / 2,
                 width: bodyW,
                 height: bodyH,
-                backgroundImage: `url(${BODY_ASSET[color]})`,
+                backgroundImage: `url(${BODY_ASSET})`,
                 backgroundSize: "contain",
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "center",
               }
             : {
-                // placeholder: 사진 없는 색상(green/brown)은 색칠된 둥근 도형으로 대체
+                // placeholder: 파일이 없을 때만 색칠된 둥근 도형으로 대체
                 position: "absolute",
                 inset: 0,
                 margin: "auto",
                 width: size * 0.72,
                 height: size * 0.72,
                 borderRadius: "42% 42% 46% 46% / 50% 50% 40% 40%",
-                background: BODY_COLOR_HEX[color],
+                background: BODY_FALLBACK_COLOR,
               }
         }
       />

@@ -24,7 +24,7 @@ export default function Home() {
             {user?.pet_name || "이름 없는 친구"}
           </div>
 
-          <Character animationState="idle" color="beige" size={220} level={user?.level} />
+          <Character animationState="idle" size={220} level={user?.level} />
 
           {loading && <p style={{ fontSize: 13, color: "var(--color-brown)" }}>얼룩이가 정보를 불러오는 중...</p>}
           {error && <p style={{ fontSize: 13, color: "var(--color-safety)" }}>{error}</p>}
@@ -40,7 +40,7 @@ export default function Home() {
                 borderRadius: 999,
                 border: "none",
                 background: "var(--color-main-green)",
-                color: "#fff",
+                color: "var(--color-text)",
                 fontFamily: "var(--font-jua)",
                 fontSize: 16,
                 cursor: "pointer",

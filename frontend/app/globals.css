@@ -4,7 +4,7 @@
 :root {
   --color-main-green: #a8d5ba; /* 세이지 그린 */
   --color-beige: #f5efe0; /* 따뜻한 아이보리 */
-  --color-brown: #b08968; /* 웜 브라운 */
+  --color-brown: #8a6a4e; /* 웜 브라운 (2026-09-14: 캡션 텍스트 대비 4.5:1 이상 나오게 원래 톤(#b08968, 3.1:1)보다 살짝 진하게 조정) */
   --color-bg: #fffbf5; /* 크림 화이트 */
   --color-yellow: #f6c453; /* 소프트 옐로우 */
   --color-text: #4a3f35; /* 차콜 브라운 (순검정 대신) */

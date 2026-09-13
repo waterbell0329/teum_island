@@ -52,7 +52,7 @@ export default function QuestsPage() {
         <h1 style={{ fontFamily: "var(--font-jua)", fontSize: 18, padding: "var(--space-4)", margin: 0 }}>퀘스트</h1>
 
         {toast && (
-          <div style={{ margin: "0 var(--space-4) var(--space-3)", padding: "var(--space-3)", borderRadius: "var(--radius-control)", background: "var(--color-yellow)", color: "#fff", fontSize: 13, textAlign: "center" }}>
+          <div style={{ margin: "0 var(--space-4) var(--space-3)", padding: "var(--space-3)", borderRadius: "var(--radius-control)", background: "var(--color-yellow)", color: "var(--color-text)", fontSize: 13, textAlign: "center" }}>
             {toast}
           </div>
         )}
@@ -81,7 +81,7 @@ export default function QuestsPage() {
                 <div style={{ flex: 1 }}>
                   <strong style={{ fontSize: 14 }}>{uq.quests.title}</strong>
                   <p style={{ fontSize: 12, color: "var(--color-brown)", margin: "4px 0 0" }}>{uq.quests.description}</p>
-                  <p style={{ fontSize: 11, color: "var(--color-yellow)", margin: "4px 0 0" }}>+{uq.quests.xp_reward} XP</p>
+                  <p style={{ fontSize: 11, color: "var(--color-brown)", margin: "4px 0 0" }}>+{uq.quests.xp_reward} XP</p>
                 </div>
                 <button
                   onClick={() => handleComplete(uq.quest_id)}
@@ -91,7 +91,7 @@ export default function QuestsPage() {
                     borderRadius: "var(--radius-control)",
                     border: "none",
                     background: "var(--color-main-green)",
-                    color: "#fff",
+                    color: "var(--color-text)",
                     fontFamily: "var(--font-jua)",
                     fontSize: 13,
                     cursor: "pointer",

@@ -4,14 +4,6 @@ pydantic-settings
 supabase
 python-dotenv
 
-# LLM: 자유텍스트 경로용(google-genai) + 편지 풀 생성 스크립트용(groq)
+# LLM: 자유텍스트 경로용(google-genai, 공개 버전에선 미호출) + 편지 풀 생성 스크립트용(groq)
 google-genai
 groq
-
-# 감정 분류기 LoRA (현재 공개 버전 미사용 -- 배포 시엔 이 아래는 빼도 됨, torch가 무거움)
-sentence-transformers
-scikit-learn
-joblib
-transformers
-peft
-accelerate

@@ -1,0 +1,14 @@
+{
+  "name": "틈 아일랜드",
+  "short_name": "틈 아일랜드",
+  "description": "거친 말은 걸러지고, 마음만 남아요 — 하루의 작은 쉼표",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffbf5",
+  "theme_color": "#a8d5ba",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

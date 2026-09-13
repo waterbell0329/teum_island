@@ -109,7 +109,7 @@ function NicknameStep({
   return (
     <Centered>
       <Logo />
-      <Character animationState="idle" color="beige" size={160} />
+      <Character animationState="idle" size={160} />
       <p style={{ fontFamily: "var(--font-jua)", fontSize: 15 }}>만나서 반가워! 뭐라고 부르면 될까?</p>
       <input
         value={nickname}
@@ -133,7 +133,7 @@ function IntroStep({ onNext }: { onNext: () => void }) {
         얼룩이가 작은 친구를 데려왔어!
       </p>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-        <Character animationState="idle" color="beige" size={170} />
+        <Character animationState="idle" size={170} />
         <Fairy state="summon" size={80} />
       </div>
       <p style={{ fontSize: 13, color: "var(--color-brown)", textAlign: "center", maxWidth: 280 }}>
@@ -150,7 +150,7 @@ function PetNameStep({ onSubmit, error }: { onSubmit: (petName: string) => void;
   const [petName, setPetName] = useState("");
   return (
     <Centered>
-      <Character animationState="celebrating" color="beige" size={170} />
+      <Character animationState="celebrating" size={170} />
       <p style={{ fontFamily: "var(--font-jua)", fontSize: 15 }}>맛있게 먹었어! 이 친구 이름은 뭐라고 지어줄까?</p>
       <input
         value={petName}
@@ -187,7 +187,7 @@ function buttonStyle(active: boolean) {
     borderRadius: "var(--radius-control)",
     border: "none",
     background: active ? "var(--color-main-green)" : "#D8D0C0",
-    color: "#fff",
+    color: "var(--color-text)",
     fontFamily: "var(--font-jua)",
     fontSize: 15,
     cursor: active ? "pointer" : "not-allowed",

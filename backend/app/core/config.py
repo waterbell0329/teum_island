@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     # 데모용 XP 배율 (평소 1.0, 발표 당일에만 .env에서 올려서 레벨업을 빨리 보여주는 용도)
     demo_xp_multiplier: float = 1.0
 
+    # CORS 허용 origin (콤마로 여러 개 구분). 배포 도메인 정해지면 .env의 이 값에 추가만 하면 됨
+    # (Vercel에 배포할 경우 프리뷰 도메인은 main.py의 allow_origin_regex로 이미 커버됨)
+    allowed_origins: str = "http://localhost:3000"
+
     class Config:
         env_file = ".env"
 

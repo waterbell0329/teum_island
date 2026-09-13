@@ -32,6 +32,12 @@ def complete_quest(quest_id: str, payload: CompleteQuestRequest):
     if user is None:
         raise HTTPException(status_code=404, detail="유저를 찾을 수 없음")
 
+    # 튜토리얼(온보딩 미완료) 중엔 XP 시스템 자체를 적용 안 하는 원칙(PROJECT_SUMMARY 9번)이
+    # emotion_logs.py에는 있는데 여기엔 빠져있어서, 온보딩 끝내기 전에 퀘스트 완료로 레벨이
+    # 올라가버리는 구멍이 있었음 (2026-09-14 발견, 여기서 같은 체크 추가해서 막음)
+    if user["level"] < 1 or not user["onboarding_completed"]:
+        raise HTTPException(status_code=400, detail="온보딩을 먼저 끝내야 퀘스트를 완료할 수 있어요")
+
     xp_reward = user_quest["quests"]["xp_reward"] or 0
 
     db_service.complete_user_quest(user_id, quest_id)

@@ -25,7 +25,7 @@ export default function LevelGauge({ level, currentXp }: { level: number; curren
         style={{
           fontFamily: "var(--font-jua)",
           fontSize: 13,
-          color: "#fff",
+          color: "var(--color-text)",
           background: "var(--color-main-green)",
           borderRadius: 999,
           padding: "4px 12px",

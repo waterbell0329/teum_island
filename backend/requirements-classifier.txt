@@ -1,0 +1,11 @@
+# 감정 분류기(LoRA on Qwen2.5-1.5B) 로컬 개발/실험용 -- 공개(배포) 버전은 자유텍스트 경로를
+# 아예 안 쓰므로(classifier_service.py 호출 안 됨) requirements.txt에서 뺐음 (2026-09-14).
+# torch를 포함해서 설치 용량이 크고 이 laptop 환경에서 추론 자체가 너무 느려 실사용 경로엔 안 씀 --
+# LoRA를 다시 붙이거나 로컬에서 분류기 코드를 테스트하고 싶을 때만 아래처럼 추가 설치:
+#   pip install -r requirements.txt -r requirements-classifier.txt
+sentence-transformers
+scikit-learn
+joblib
+transformers
+peft
+accelerate

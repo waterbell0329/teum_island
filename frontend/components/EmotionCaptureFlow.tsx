@@ -134,7 +134,6 @@ export default function EmotionCaptureFlow({ userId, ctaLabel = "홈으로", onD
         <Fairy state={fairyState} size={90} />
         <Character
           animationState={characterState}
-          color="beige"
           size={200}
           onEatingComplete={handleEatingComplete}
           foodEmotion={result?.emotion}
@@ -158,7 +157,7 @@ export default function EmotionCaptureFlow({ userId, ctaLabel = "홈으로", onD
         <div
           style={{
             background: "var(--color-safety)",
-            color: "#fff",
+            color: "var(--color-text)",
             padding: "var(--space-5)",
             borderRadius: "var(--radius-card)",
             whiteSpace: "pre-line",
@@ -234,7 +233,7 @@ const ctaStyle = {
   borderRadius: "var(--radius-control)",
   border: "none",
   background: "var(--color-main-green)",
-  color: "#fff",
+  color: "var(--color-text)",
   fontFamily: "var(--font-jua)",
   fontSize: 15,
   cursor: "pointer",

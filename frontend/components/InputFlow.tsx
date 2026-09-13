@@ -244,7 +244,7 @@ function SubmitButton({ ready, disabled, onClick }: { ready: boolean; disabled?:
         borderRadius: "var(--radius-control)",
         border: "none",
         background: inactive ? "#D8D0C0" : "var(--color-main-green)",
-        color: "#fff",
+        color: "var(--color-text)",
         fontFamily: "var(--font-jua)",
         fontSize: 16,
         cursor: inactive ? "not-allowed" : "pointer",

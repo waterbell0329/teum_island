@@ -22,7 +22,7 @@ export default function LoginPage() {
         }}
       >
         <Logo size="lg" />
-        <Character animationState="idle" color="beige" size={180} />
+        <Character animationState="idle" size={180} />
 
         <button
           onClick={signInWithGoogle}
