@@ -1,0 +1,28 @@
+# Render 배포 설정 (백엔드 전용). Render 대시보드에서 "New +" -> "Blueprint" ->
+# 이 저장소 연결하면 이 파일 기준으로 서비스가 자동 구성됨.
+# 자세한 순서는 DEPLOYMENT.md 참고.
+services:
+  - type: web
+    name: teum-island-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:3000
+      - key: DEMO_XP_MULTIPLIER
+        value: "1.0"
