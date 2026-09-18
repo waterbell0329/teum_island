@@ -23,7 +23,7 @@ export default function LevelGauge({ level, currentXp }: { level: number; curren
     >
       <span
         style={{
-          fontFamily: "var(--font-jua)",
+          fontFamily: "var(--font-body)",
           fontSize: 13,
           color: "var(--color-text)",
           background: "var(--color-main-green)",

@@ -1,18 +1,21 @@
 "use client";
 
-// 펫 캐릭터. 3레이어 구조(몸통 / 얼굴(눈+입) / 사지(팔+다리))를 animationState 하나로 제어.
-// 새 리액션이 필요해도 이 3레이어 안에서 확장할 것 -- 레이어를 더 쪼개지 말 것 (CLAUDE_1.md 참고).
+// 펫 캐릭터. 몸통(사진 한 장) + 얼굴(눈+입)을 animationState 하나로 제어.
 //
-// 각 파츠는 원본 시트(all_parts.json 기준)의 실제 픽셀 크기 비율(NATIVE)로 스케일링해서
-// 배치함 -- 예전엔 %로 대충 잡아서 팔/다리가 실제 그림보다 훨씬 크게 보이는 문제가 있었음.
+// 2026-09-18: 팔다리는 완전히 뺐음 (사용자 요청) -- 이전엔 고정 자세로라도 그려주고 있었는데,
+// 그마저도 위치 맞추는 게 계속 말썽이라 아예 없애고 "몸통 사진 한 장 + 눈 깜빡임"만으로
+// 캐릭터를 표현하기로 함. 생동감은 몸통 전체를 사진 단위로 스쿼시앤스트레치시키는
+// bodyVariants(lib/animations.ts)와 눈 깜빡임이 전담. 요정(Fairy.tsx)도 같은 방향으로
+// 부위별 리깅을 포기하고 통짜 이미지 방식으로 이미 전환했음.
+//
+// 남은 파츠(몸통/눈/입)는 원본 시트(all_parts.json 기준)의 실제 픽셀 크기 비율(NATIVE)로
+// 스케일링해서 배치함 -- 예전엔 %로 대충 잡아서 실제 그림보다 훨씬 크게 보이는 문제가 있었음.
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   bodyVariants,
   eyeVariants,
   mouthVariants,
-  armVariants,
-  legVariants,
   crumbVariants,
   sparkleVariants,
   EAT_PHASE_ORDER,
@@ -46,12 +49,6 @@ const MOUTH_ASSET: Record<"closed" | "open", string | null> = {
   closed: "/assets/character/mouth-closed.png",
   open: "/assets/character/mouth-open.png",
 };
-const ARM_ASSET: Record<"down" | "reach", string | null> = {
-  down: "/assets/character/arm-down.png",
-  reach: "/assets/character/arm-reach.png",
-};
-const LEGS_ASSET: string | null = "/assets/character/legs.png";
-
 // 원본 시트에서 각 파츠의 실제 픽셀 크기 (all_parts.json). 몸통 너비 기준으로 전부 같은
 // 비율(scale)을 곱해서 배치 -> 실제 그림 비율 그대로 유지됨.
 const NATIVE = {
@@ -60,9 +57,6 @@ const NATIVE = {
   eyesHappy: { w: 77, h: 29 },
   mouthClosed: { w: 48, h: 19 },
   mouthOpen: { w: 73, h: 43 },
-  armDown: { w: 47, h: 89 },
-  armReach: { w: 95, h: 74 },
-  legs: { w: 124, h: 55 },
 };
 
 export default function Character({
@@ -139,16 +133,6 @@ export default function Character({
         ? "celebrating"
         : animationState;
 
-  const armState: string =
-    eatPhase === "reach"
-      ? "reach"
-      : eatPhase === "toMouth" || eatPhase === "chew1" || eatPhase === "chew2"
-        ? "toMouth"
-        : animationState === "celebrating"
-          ? "celebrateWave"
-          : "down";
-
-  const legState: string = animationState === "celebrating" ? "celebrateKick" : "idle";
   const mouthState: "open" | "closed" = eatPhase === "chew1" || eatPhase === "chew2" ? "open" : "closed";
   const eyeState: string = blink ? "blink" : animationState === "celebrating" ? "happy" : "open";
 
@@ -161,8 +145,6 @@ export default function Character({
 
   return (
     <div style={{ width: size, height: size, position: "relative" }}>
-      <Limbs armState={armState} legState={legState} size={size} scale={scale} bodyW={bodyW} bodyH={bodyH} />
-
       <motion.div
         variants={bodyVariants}
         animate={bodyState}
@@ -195,7 +177,7 @@ export default function Character({
         }
       />
 
-      <Outfit level={level} scale={scale} bodyTop={(size - bodyH) / 2} bodyH={bodyH} />
+      <Outfit level={level} bodyTop={(size - bodyH) / 2} bodyH={bodyH} bodyW={bodyW} />
 
       <Face eyeState={eyeState} mouthState={mouthState} size={size} scale={scale} bodyH={bodyH} />
 
@@ -249,27 +231,45 @@ export default function Character({
 // 정면 이미지만 씀(캐릭터는 항상 정면만 보여주니까). 뒷면/옆면은 나중에 옷장 화면에서 씀.
 function Outfit({
   level,
-  scale,
   bodyTop,
   bodyH,
+  bodyW,
 }: {
   level?: number;
-  scale: number;
   bodyTop: number;
   bodyH: number;
+  bodyW: number;
 }) {
   const outfit = getOutfitForLevel(level ?? 0);
   if (!outfit) return null;
 
-  const w = outfit.frontNative.w * scale;
-  const h = outfit.frontNative.h * scale;
+  // 2026-09-18: 의상 사진마다 원본 비율이 다 달라서(몸통 사진이랑 별도로 찍힌 거라 서로
+  // 맞춰 찍힌 게 아님) 얼굴을 덮어버리는 사고가 계속 재발했음. 이번엔 "몸통 폭에 맞춰서"
+  // 끼우는 방식으로 바꿈 -- 옷 너비를 몸통 너비의 일정 비율(WIDTH_FACTOR)로 먼저 맞추고
+  // (실제 입은 것처럼 폭이 맞아떨어지게), 그 폭 기준으로 옷의 원본 비율을 유지해서 높이를
+  // 정함. 그렇게 했을 때 혹시 얼굴 아래 안전영역보다 키가 커지면(세로로 긴 옷) 그때만
+  // 높이를 안전영역에 맞춰 다시 줄임(-> 얼굴은 절대 안 덮이는 것도 그대로 보장됨).
+  const WIDTH_FACTOR = 0.8; // 몸통 사진 폭(귀 포함) 대비 옷 폭 비율, 스크린샷으로 보정한 값
+  // 옷마다 목선/어깨 장식이 이미지 박스 안에서 차지하는 여백이 달라서(예: 어깨 나뭇잎
+  // 상의는 장식이 위쪽까지 꽉 차있음), 0.56로는 일부 옷이 입 근처까지 닿아서 좀 더 내림
+  const SAFE_TOP = 0.6;
+  const SAFE_BOTTOM = 0.98;
+  const maxH = bodyH * (SAFE_BOTTOM - SAFE_TOP);
+  const aspect = outfit.frontNative.w / outfit.frontNative.h;
+
+  let w = bodyW * WIDTH_FACTOR;
+  let h = w / aspect;
+  if (h > maxH) {
+    h = maxH;
+    w = h * aspect;
+  }
 
   return (
     <div
       style={{
         position: "absolute",
         left: "50%",
-        top: bodyTop + bodyH * 0.32,
+        top: bodyTop + bodyH * SAFE_TOP,
         marginLeft: -w / 2,
         width: w,
         height: h,
@@ -302,13 +302,15 @@ function FoodOverlay({
   const foodSize = size * 0.22;
   const atMouth = eatPhase === "toMouth";
 
+  // 몸통 오른쪽 옆(대략 size*0.2 부근)에서 살짝 떨어져 왔다가 입 쪽으로 이동하는 동선
+  // (2026-09-18: 팔 자체는 없앴지만, 먹이가 어디선가 다가와서 먹히는 느낌은 유지)
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.5, x: size * 0.34, y: bodyTop + bodyH * 0.5 }}
+      initial={{ opacity: 0, scale: 0.5, x: size * 0.2, y: bodyTop + bodyH * 0.5 }}
       animate={{
         opacity: 1,
         scale: atMouth ? 0.55 : 1,
-        x: atMouth ? 0 : size * 0.34,
+        x: atMouth ? 0 : size * 0.2,
         y: atMouth ? bodyTop + bodyH * 0.4 : bodyTop + bodyH * 0.5,
         transition: { duration: EAT_PHASE_DURATION[eatPhase] / 1000, ease: "easeOut" },
       }}
@@ -334,72 +336,6 @@ function FoodOverlay({
     >
       {!entry?.asset && (entry?.emoji ?? "🍽️")}
     </motion.div>
-  );
-}
-
-// --- 사지 레이어: 팔 2개 + 다리 -----------------------------------------------
-function Limbs({
-  armState,
-  legState,
-  size,
-  scale,
-  bodyW,
-  bodyH,
-}: {
-  armState: string;
-  legState: string;
-  size: number;
-  scale: number;
-  bodyW: number;
-  bodyH: number;
-}) {
-  // down 이외(reach/toMouth/celebrateWave)는 전부 "뻗은" 포즈 아트로
-  const armPose: "down" | "reach" = armState === "down" ? "down" : "reach";
-  const armAsset = ARM_ASSET[armPose];
-  const armNative = armPose === "down" ? NATIVE.armDown : NATIVE.armReach;
-  const armW = armNative.w * scale;
-  const armH = armNative.h * scale;
-
-  const bodyTop = (size - bodyH) / 2;
-
-  const armBase = (side: "left" | "right") => ({
-    position: "absolute" as const,
-    top: bodyTop + bodyH * 0.55,
-    [side]: size / 2 - bodyW / 2 - armW * 0.35,
-    width: armW,
-    height: armH,
-    background: armAsset ? "transparent" : "#B08968",
-    backgroundImage: armAsset ? `url(${armAsset})` : undefined,
-    backgroundSize: "contain",
-    backgroundRepeat: "no-repeat",
-    transformOrigin: side === "left" ? "top right" : "top left",
-  });
-
-  const legsW = NATIVE.legs.w * scale;
-  const legsH = NATIVE.legs.h * scale;
-
-  return (
-    <>
-      <motion.div variants={armVariants} animate={armState} style={armBase("left")} />
-      <motion.div variants={armVariants} animate={armState} style={{ ...armBase("right"), scaleX: -1 }} />
-      <motion.div
-        variants={legVariants}
-        animate={legState}
-        style={{
-          position: "absolute",
-          top: bodyTop + bodyH - legsH * 0.4,
-          left: "50%",
-          marginLeft: -legsW / 2,
-          width: legsW,
-          height: legsH,
-          background: LEGS_ASSET ? "transparent" : "#8B6F47",
-          backgroundImage: LEGS_ASSET ? `url(${LEGS_ASSET})` : undefined,
-          backgroundSize: "contain",
-          backgroundRepeat: "no-repeat",
-          transformOrigin: "top center",
-        }}
-      />
-    </>
   );
 }
 

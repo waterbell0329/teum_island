@@ -15,11 +15,11 @@ from app.data.quest_bank import quest_uuid
 
 router = APIRouter()
 
-# 공개(공모전) 버전은 구조화입력만 지원. 편지는 미리 생성된 풀에서 서빙하고,
-# 자유텍스트 분류(LoRA)와 실시간 Gemini 호출(analysis/letter/profile)은 이 경로에서 안 씀.
-# classifier_service / analysis_service / profile_service / letter_service.generate_letter 는
-# 코드에 남아있지만 여기서 호출하지 않음.
-ENABLE_FREE_TEXT = False
+# 2026-09-18: 자유텍스트 경로 실제로 켬 -- LoRA 분류기(느려서 못 씀) 대신
+# letter_service.analyze_free_text()가 Groq로 분류+편지작성을 한 번에 실시간 처리함.
+# classifier_service / analysis_service / profile_service / letter_service.generate_letter(Gemini)는
+# 코드에 남아있지만 여기서 호출 안 함(무료 쿼터 문제로 계속 보류).
+ENABLE_FREE_TEXT = True
 
 
 @router.post("", response_model=EmotionLogResponse)
@@ -52,14 +52,22 @@ def create_emotion_log(payload: EmotionLogCreateFreeText | EmotionLogCreateStruc
     if payload.input_type == "free_text":
         if not ENABLE_FREE_TEXT:
             raise HTTPException(status_code=400, detail="이 버전은 자유텍스트 입력을 지원하지 않아요. 감정을 골라서 전해주세요.")
-        raise HTTPException(status_code=501, detail="free_text 경로 미구현")
-
-    emotion = payload.emotion
-    intensity = payload.intensity
-    situation_category = payload.situation_category
-
-    # --- 편지: 미리 생성된 풀에서 조합 매칭 후 랜덤 선택 (Gemini 호출 없음) ---
-    letter = letter_service.pick_letter(emotion, situation_category, intensity)
+        if not raw_text.strip():
+            raise HTTPException(status_code=400, detail="무슨 일이 있었는지 한 줄이라도 적어줘야 편지를 쓸 수 있어요.")
+        # --- 편지: Groq로 감정 분류 + 편지작성 실시간 처리 (구조화입력과 달리 풀을 못 씀) ---
+        analysis = letter_service.analyze_free_text(raw_text)
+        emotion = analysis["emotion"]
+        intensity = analysis["intensity"]
+        situation_category = analysis["situation_category"]
+        letter = analysis["letter_text"]
+        analysis_source = "free_text"
+    else:
+        emotion = payload.emotion
+        intensity = payload.intensity
+        situation_category = payload.situation_category
+        # --- 편지: 미리 생성된 풀에서 조합 매칭 후 랜덤 선택 (실시간 LLM 호출 없음) ---
+        letter = letter_service.pick_letter(emotion, situation_category, intensity)
+        analysis_source = "structured"
 
     # --- XP / 레벨 ---
     # 0단계(튜토리얼, 온보딩 미완료)에서는 XP 시스템 자체를 적용하지 않음 (PROJECT_SUMMARY 9번 섹션)
@@ -86,7 +94,7 @@ def create_emotion_log(payload: EmotionLogCreateFreeText | EmotionLogCreateStruc
             "situation_category": situation_category,
             "emotion": emotion,
             "intensity": intensity,
-            "source": "structured",
+            "source": analysis_source,
         },
     )
     if not is_tutorial:

@@ -1,6 +1,12 @@
 "use client";
 
 // 하단 네비게이션 (홈 / 퀘스트 / 옷장). 실제 아이콘 반영 완료 (2026-09-13, 복숭아/두루마리/옷걸이).
+// 2026-09-18: 채영님이 주신 나뭇가지 프레임을 하단 네비 전체 테두리로 적용 (border-image).
+// 원본(1024x1024, "나무프레임.png")은 가짜 체크무늬 배경이라 실제 투명 PNG로 배경제거 후
+// frontend/public/assets/icons/nav-frame.png 로 저장해둠. 좌표는 채영님이 알려준 그대로:
+//   상단 바 y:160~230, 하단 바 y:770~830, 좌측 바 x:160~220, 우측 바 x:765~830
+// -> border-image-slice로 변환(각 모서리에서 안쪽으로 얼마나 잘라 쓸지):
+//   top=230, right=1024-765=259, bottom=1024-770=254, left=220
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -24,7 +30,11 @@ export default function BottomNav() {
         padding: "var(--space-3) 0",
         paddingBottom: "calc(var(--space-3) + env(safe-area-inset-bottom))",
         background: "var(--color-bg)",
-        borderTop: "1px solid #ECE1CC",
+        borderWidth: 14,
+        borderStyle: "solid",
+        borderImageSource: "url(/assets/icons/nav-frame.png)",
+        borderImageSlice: "230 259 254 220",
+        borderImageRepeat: "stretch",
       }}
     >
       {TABS.map((tab) => {

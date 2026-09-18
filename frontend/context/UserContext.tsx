@@ -21,6 +21,10 @@ interface UserContextValue {
   error: string | null;
   refreshUser: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  /** 로그인 없이 체험하기 -- 원티드 챔피언십 공지(2026-09-18) 대응: 회원가입 없이도
+   * 심사위원/투표자가 핵심 기능을 바로 써볼 수 있게 Supabase 익명 로그인으로 게스트 세션 발급.
+   * (Supabase 대시보드에서 Authentication > Sign In / Up > Anonymous Sign-Ins 켜야 동작함) */
+  signInAsGuest: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -90,6 +94,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const signInAsGuest = useCallback(async () => {
+    const { error: signInError } = await supabase.auth.signInAnonymously();
+    if (signInError) {
+      // Supabase 프로젝트에서 Anonymous Sign-Ins가 꺼져있으면 여기로 옴
+      return { error: "지금은 체험 모드를 준비 중이에요, 구글로 로그인해줄래?" };
+    }
+    return { error: null };
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
   }, []);
@@ -107,6 +120,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         error,
         refreshUser,
         signInWithGoogle,
+        signInAsGuest,
         signOut,
       }}
     >

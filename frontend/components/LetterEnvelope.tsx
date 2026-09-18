@@ -58,9 +58,16 @@ export default function LetterEnvelope({ variant = "list", size = 64, opened = f
     );
   }
 
-  return (
-    <button onClick={onClick} style={{ background: "none", border: "none", padding: 0, cursor: onClick ? "pointer" : "default" }}>
-      {content}
-    </button>
-  );
+  // 2026-09-15: 편지함 목록에서는 이 컴포넌트 자체가 이미 <button>인 부모(letters/page.tsx의
+  // 행 버튼) 안에 또 들어가는데, onClick 없이도 항상 <button>으로 감싸고 있어서 button 안에
+  // button이 중첩되는 HTML 오류(+ hydration 경고)가 있었음. onClick이 실제로 있을 때만
+  // 버튼으로 감싸고, 없으면(순수 장식용) 평범한 div로 렌더링.
+  if (onClick) {
+    return (
+      <button onClick={onClick} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+        {content}
+      </button>
+    );
+  }
+  return <div>{content}</div>;
 }

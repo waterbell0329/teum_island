@@ -5,6 +5,8 @@
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import LoadingScreen from "@/components/LoadingScreen";
+import PageTransition from "@/components/PageTransition";
 
 const PUBLIC_PATHS = ["/login"];
 const isAuthCallback = (path: string) => path.startsWith("/auth/callback");
@@ -28,15 +30,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }
   }, [loading, isPublic, isOnboarding, session, needsOnboarding, router]);
 
-  if (isPublic) return <>{children}</>;
+  if (isPublic) return <PageTransition>{children}</PageTransition>;
 
   if (loading || (!session && !isPublic) || (needsOnboarding && !isOnboarding) || (!needsOnboarding && isOnboarding)) {
-    return (
-      <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "var(--color-brown)", fontFamily: "var(--font-jua)" }}>얼룩이가 듣고 있어...</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
-  return <>{children}</>;
+  return <PageTransition>{children}</PageTransition>;
 }

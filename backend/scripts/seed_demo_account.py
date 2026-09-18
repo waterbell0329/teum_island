@@ -29,6 +29,7 @@ from app.services import db_service, xp_service  # noqa: E402
 DEFAULT_EMAIL = "demo@teumisland.local"
 DEFAULT_PASSWORD = "TeumIslandDemo!2026"
 DEFAULT_NICKNAME = "데모"
+DEFAULT_PET_NAME = "몽글이"  # 팀에서 펫 기본 이름 아직 미확정 -- 확정되면 이 값만 바꾸면 됨
 
 PROFILE_SUMMARY = (
     "직장/알바에서의 스트레스와 인간관계에서 오는 서운함을 자주 겪지만, "
@@ -143,13 +144,18 @@ def find_or_create_auth_user(email: str, password: str) -> str:
         raise RuntimeError(f"'{email}' 계정을 만들지도, 찾지도 못했음") from e
 
 
-def seed(user_id: str, nickname: str, reset: bool) -> None:
+def seed(user_id: str, nickname: str, pet_name: str, reset: bool) -> None:
     if reset:
         print("기존 기록/프로필 삭제 중...")
         db_service.delete_emotion_logs_for_user(user_id)
         db_service.delete_emotion_profile(user_id)
 
-    db_service.complete_onboarding(user_id, nickname)
+    # 2026-09-14 수정: 예전엔 complete_onboarding(user_id, nickname)으로 한 번만 불렀는데,
+    # 온보딩 API가 save_nickname/complete_onboarding 2단계로 나뉘면서 시그니처가
+    # complete_onboarding(user_id, pet_name)으로 바뀜 -- 이 스크립트가 안 따라가서
+    # nickname이 실제로는 pet_name 자리에 들어가고 진짜 nickname은 저장 안 되고 있었음.
+    db_service.save_nickname(user_id, nickname)
+    db_service.complete_onboarding(user_id, pet_name)
 
     level, xp = 1, 0
     now = datetime.now(timezone.utc)
@@ -186,7 +192,7 @@ def seed(user_id: str, nickname: str, reset: bool) -> None:
 
     db_service.upsert_emotion_profile(user_id, PROFILE_SUMMARY)
 
-    print(f"\n완료: user_id={user_id}, nickname={nickname}")
+    print(f"\n완료: user_id={user_id}, nickname={nickname}, pet_name={pet_name}")
     print(f"최종 레벨={level}, 잔여 XP={xp}, 기록 {len(SEED_RECORDS)}개 시딩됨")
 
 
@@ -196,11 +202,12 @@ def main():
     parser.add_argument("--email", default=DEFAULT_EMAIL, help="--user-id 없을 때 만들 이메일/비번 계정 이메일")
     parser.add_argument("--password", default=DEFAULT_PASSWORD)
     parser.add_argument("--nickname", default=DEFAULT_NICKNAME)
+    parser.add_argument("--pet-name", default=DEFAULT_PET_NAME, help="펫 이름 (아직 팀에서 기본 이름 확정 전이라 임시값)")
     parser.add_argument("--reset", action="store_true", help="기존 기록을 지우고 다시 채움")
     args = parser.parse_args()
 
     user_id = args.user_id or find_or_create_auth_user(args.email, args.password)
-    seed(user_id, args.nickname, args.reset)
+    seed(user_id, args.nickname, args.pet_name, args.reset)
 
 
 if __name__ == "__main__":

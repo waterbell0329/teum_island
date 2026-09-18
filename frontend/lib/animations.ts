@@ -1,4 +1,4 @@
-// Character.tsx 3레이어(몸통/얼굴/사지)가 쓰는 Framer Motion variant 모음.
+// Character.tsx가 쓰는 Framer Motion variant 모음 (몸통/얼굴 담당, 사지는 고정 자세).
 // PROJECT_SUMMARY.md "13. 애니메이션 참고" 섹션의 캐치→먹기→셀레브레이션 시퀀스를
 // element.animate() keyframe 구조 그대로 Framer Motion으로 옮긴 것.
 // 핵심 원칙: 스쿼시앤스트레치 + 레이어 분리 + 바운스 이징 -> 그림보다 타이밍이 8할.
@@ -102,34 +102,9 @@ export const mouthVariants: Variants = {
 };
 
 // ---------------------------------------------------------------------------
-// 사지 레이어 (팔 + 다리)
-// ---------------------------------------------------------------------------
-export const armVariants: Variants = {
-  down: { rotate: 0, y: 0, transition: { duration: 0.25 } },
-  reach: {
-    rotate: -35,
-    y: -6,
-    transition: { duration: EAT_PHASE_DURATION.reach / 1000, ease: BOUNCE },
-  },
-  toMouth: {
-    rotate: -70,
-    y: -10,
-    transition: { duration: EAT_PHASE_DURATION.toMouth / 1000, ease: "easeOut" },
-  },
-  celebrateWave: {
-    rotate: [0, -25, 15, -20, 0],
-    transition: { duration: 1.1, ease: "easeInOut" },
-  },
-};
-
-export const legVariants: Variants = {
-  idle: { rotate: 0 },
-  celebrateKick: {
-    rotate: [0, 12, -12, 8, 0],
-    transition: { duration: 1.1, ease: "easeInOut" },
-  },
-};
-
+// 사지 레이어: 2026-09-15부로 팔다리는 항상 기본 자세로 고정 (Character.tsx의 Limbs
+// 컴포넌트 주석 참고) -- 상태별로 회전/위치를 따로 맞추는 게 너무 손이 많이 가고
+// 자꾸 어긋나서, 생동감은 위 bodyVariants(몸통 통짜 스쿼시앤스트레치)가 전담하도록 단순화.
 // ---------------------------------------------------------------------------
 // 부스러기(먹이 소멸) + 셀레브레이션 반짝이 오버레이
 // ---------------------------------------------------------------------------

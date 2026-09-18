@@ -39,6 +39,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={`${gamja.variable} ${jua.variable}`}>
+      <head>
+        {/* Pretendard(UI 본문/라벨용, 2026-09-18 채영님 폰트 제안) -- globals.css에서
+            @import하면 Tailwind v4 처리 순서랑 충돌해서 여기서 직접 불러옴 */}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css" />
+      </head>
       <body style={{ margin: 0, overscrollBehaviorY: "contain" /* pull-to-refresh 방지 */ }}>
         <UserProvider>
           <div className="app-frame">

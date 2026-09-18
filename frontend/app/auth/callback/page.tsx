@@ -19,7 +19,7 @@ export default function AuthCallbackPage() {
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <p style={{ color: "var(--color-brown)", fontFamily: "var(--font-jua)" }}>얼룩이가 문을 열어주는 중...</p>
+      <p style={{ color: "var(--color-brown)", fontFamily: "var(--font-body)" }}>얼룩이가 문을 열어주는 중...</p>
     </div>
   );
 }

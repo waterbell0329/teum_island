@@ -49,7 +49,7 @@ export default function QuestsPage() {
   return (
     <IslandBackground>
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
-        <h1 style={{ fontFamily: "var(--font-jua)", fontSize: 18, padding: "var(--space-4)", margin: 0 }}>퀘스트</h1>
+        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: 18, padding: "var(--space-4)", margin: 0 }}>퀘스트</h1>
 
         {toast && (
           <div style={{ margin: "0 var(--space-4) var(--space-3)", padding: "var(--space-3)", borderRadius: "var(--radius-control)", background: "var(--color-yellow)", color: "var(--color-text)", fontSize: 13, textAlign: "center" }}>
@@ -92,7 +92,7 @@ export default function QuestsPage() {
                     border: "none",
                     background: "var(--color-main-green)",
                     color: "var(--color-text)",
-                    fontFamily: "var(--font-jua)",
+                    fontFamily: "var(--font-heading)",
                     fontSize: 13,
                     cursor: "pointer",
                     whiteSpace: "nowrap",

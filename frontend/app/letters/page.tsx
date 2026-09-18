@@ -31,7 +31,7 @@ export default function LettersPage() {
           <button onClick={() => router.push("/")} aria-label="뒤로" style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}>
             ←
           </button>
-          <span style={{ fontFamily: "var(--font-jua)", fontSize: 16 }}>편지 보관함</span>
+          <span style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>편지 보관함</span>
         </div>
 
         {loading ? (
@@ -69,7 +69,7 @@ export default function LettersPage() {
                       <span>{new Date(log.created_at).toLocaleDateString("ko-KR")}</span>
                     </div>
                     <p
-                      className="font-hand"
+                      className="font-letter"
                       style={{
                         margin: "4px 0 0",
                         fontSize: 15,

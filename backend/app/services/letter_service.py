@@ -1,12 +1,17 @@
 """
 3단계: 공감 응답(편지)
 
-공개(공모전) 버전은 구조화입력(감정12 × 상황5 × 강도3)만 지원하고, 편지는 미리 생성해둔
-풀(app/data/letter_pool.json)에서 랜덤으로 뽑아 서빙한다. -> 서빙 시 Gemini 호출 0회.
+구조화입력(감정12 × 상황5 × 강도3)은 미리 생성해둔 풀(app/data/letter_pool.json)에서
+랜덤으로 뽑아 서빙한다 -> 서빙 시 실시간 LLM 호출 0회.
   - 풀 생성:  python scripts/generate_letter_pool.py
   - 풀에 해당 조합이 없으면 감정별 기본 문구로 폴백
 
-generate_letter()(실시간 Gemini 생성)는 자유텍스트 경로용으로 남겨두지만 공개 버전에선 안 씀.
+자유텍스트입력은 미리 만든 풀이 있을 수가 없어서(유저가 실제로 뭐라고 썼는지 모르니까)
+analyze_free_text()가 Groq를 실시간 호출해서 분류+편지작성을 한 번에 처리한다
+(2026-09-18 반영. Gemini 무료 쿼터 문제 때문에 Groq 사용 -- 오프라인 풀 생성 때와 동일).
+
+generate_letter()(실시간 Gemini 생성)는 예전에 쓰던 자유텍스트 경로 흔적으로 남겨두지만
+지금은 analyze_free_text()로 대체되어 안 씀.
 """
 import json
 import os
@@ -15,6 +20,7 @@ import time
 from google import genai
 from google.genai import types
 from google.genai.errors import ServerError
+from groq import Groq
 from app.core.config import settings
 
 POSITIVE_EMOTIONS = {"뿌듯함", "설렘", "안심", "감사함", "홀가분함"}
@@ -60,6 +66,94 @@ def pick_letter(emotion: str, situation_category: str | None, intensity: int | N
     if candidates:
         return random.choice(candidates)
     return _FALLBACK.get(emotion, _GENERIC_FALLBACK)
+
+
+# ---------------------------------------------------------------------------
+# 자유텍스트("편하게 쓰기") 경로: Groq로 분류 + 편지작성을 한 번에 실시간 처리.
+# 구조화입력과 다르게 유저가 실제 문장을 적기 때문에, 그 내용을 편지에 반영할 수 있음
+# (풀 생성 프롬프트는 지어내지 말라고 했지만 여기는 반대로 실제 내용 언급을 요구함).
+# ---------------------------------------------------------------------------
+_VALID_EMOTIONS = set(_FALLBACK.keys())
+_VALID_SITUATIONS = {"직장/알바", "인간관계", "학업/진로", "미래불안", "기타"}
+
+FREE_TEXT_SYSTEM_PROMPT = """너는 무인도 숲속에 사는 작은 요정이야. 유저가 자기 하루 이야기를
+자유롭게 적어서 보내면, 그 글을 읽고 (1) 감정을 분류하고 (2) 편지를 써줘.
+
+[분류 규칙]
+- emotion: 아래 12개 중 하나만, 정확히 이 표기 그대로 골라 (다른 단어나 신조어 절대 금지)
+  분노, 억울함, 무기력, 막막함, 서운함, 불안함, 지침, 뿌듯함, 설렘, 안심, 감사함, 홀가분함
+- situation_category: 아래 5개 중 하나만
+  직장/알바, 인간관계, 학업/진로, 미래불안, 기타
+- intensity: 1(약간 힘듦/좋음), 2(많이 힘듦/좋음), 3(정말 힘듦/좋음) 중 감정의 세기에 맞는 것
+
+[편지 규칙]
+말투: 다정하고 담백한 존댓말(~요/~예요체). 20~30대 사회초년생이 읽을 편지라 유치하지도
+과장되지도 않게. 반말 쓰지 마.
+구조 (부정 감정): ① 유저가 적은 구체적인 상황을 실제로 언급하며 인정 → ② 그 안에서 보이는
+강점 하나 언급(인내심/책임감/유연성/경계설정/노력/회복탄력성/배려심 중 하나) → ③ 담백한 격려
+구조 (긍정 감정): 절제 없이 격하게 축하하고 함께 기뻐하기 (그래도 존댓말 유지)
+
+중요:
+- 유저가 실제로 적은 내용을 반드시 반영해서 "진짜 내 얘기를 들어줬다"는 느낌을 줄 것.
+  적히지 않은 내용을 지어내지 말 것.
+- 과한 미사여구·비유·시적 표현 자제, 마크다운 기호(**, *, # 등) 쓰지 말 것.
+- 금지 표현: 화이팅, 다 잘될거야, 누구나 그래, 긍정적으로 생각해
+- 편지는 3~4문장, 문단 사이 빈 줄로 구분. 인사말/서명 없이 본문만.
+
+반드시 아래 JSON 형식으로만 답해 (다른 텍스트 절대 추가하지 말 것):
+{"emotion": "...", "situation_category": "...", "intensity": 1, "letter_text": "..."}
+"""
+
+
+def analyze_free_text(raw_text: str) -> dict:
+    """자유텍스트 -> {emotion, situation_category, intensity, letter_text}.
+    Groq 호출이 실패하거나(레이트리밋 등) 응답을 못 알아들으면(JSON 파싱 실패, 목록에 없는
+    감정 등) 안전한 기본값으로 조용히 폴백 -- 자유텍스트 경로가 이것 때문에 통째로
+    에러나면 안 되니까."""
+    fallback = {
+        "emotion": "막막함",
+        "situation_category": "기타",
+        "intensity": 2,
+        "letter_text": _FALLBACK["막막함"],
+    }
+    if not settings.groq_api_key:
+        return fallback
+
+    try:
+        client = Groq(api_key=settings.groq_api_key)
+        resp = client.chat.completions.create(
+            model=settings.groq_model,
+            messages=[
+                {"role": "system", "content": FREE_TEXT_SYSTEM_PROMPT},
+                {"role": "user", "content": raw_text},
+            ],
+            temperature=0.85,
+            max_tokens=700,
+            reasoning_effort="low",
+            response_format={"type": "json_object"},
+        )
+        data = json.loads(resp.choices[0].message.content or "{}")
+    except Exception as e:
+        # RateLimitError, JSON 파싱 실패 등 뭐가 됐든 조용히 폴백 (자유텍스트 경로가
+        # 이것 때문에 500 나면 안 됨)
+        print(f"[WARN] 자유텍스트 분석 실패, 폴백 사용: {e}")
+        return fallback
+
+    emotion = data.get("emotion")
+    situation = data.get("situation_category")
+    intensity = data.get("intensity")
+    letter = (data.get("letter_text") or "").replace("**", "").strip()
+
+    if emotion not in _VALID_EMOTIONS:
+        return fallback
+    if situation not in _VALID_SITUATIONS:
+        situation = "기타"
+    if intensity not in (1, 2, 3):
+        intensity = 2
+    if not letter:
+        letter = _FALLBACK[emotion]
+
+    return {"emotion": emotion, "situation_category": situation, "intensity": intensity, "letter_text": letter}
 
 
 # ---------------------------------------------------------------------------

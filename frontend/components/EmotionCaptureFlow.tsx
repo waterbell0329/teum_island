@@ -5,6 +5,7 @@
 // (둘 다 결국 같은 POST /emotion-logs 흐름이라서).
 import { useEffect, useRef, useState } from "react";
 import InputFlow, { INPUT_DRAFT_KEYS } from "@/components/InputFlow";
+import RotatingCaption from "@/components/RotatingCaption";
 import Character, { type CharacterAnimationState } from "@/components/Character";
 import Fairy, { type FairyState } from "@/components/Fairy";
 import LetterPaper from "@/components/LetterPaper";
@@ -18,6 +19,9 @@ import type { EmotionLogCreate, EmotionLogResponse, EmotionLogSubmit } from "@/t
 type Phase = "form" | "listening" | "understood" | "eating" | "celebrating" | "result" | "crisis" | "error";
 
 const UNDERSTOOD_DURATION_MS = 700;
+
+// 응답 대기 문구 -- 실제로는 편지 풀에서 즉시 서빙돼서 보통 1~2초면 끝나므로 짧은 간격으로 순환
+const LISTENING_MESSAGES = ["얼룩이가 글을 읽고 있어요", "천천히 숨 쉬어도 괜찮아요", "편지를 쓰는 중이에요"];
 
 interface EmotionCaptureFlowProps {
   userId: string;
@@ -139,13 +143,14 @@ export default function EmotionCaptureFlow({ userId, ctaLabel = "홈으로", onD
           foodEmotion={result?.emotion}
           level={user?.level}
         />
-        <p style={{ fontSize: 14, color: "var(--color-brown)" }}>
-          {phase === "listening"
-            ? "얼룩이가 듣고 있어..."
-            : phase === "understood"
-              ? "얼룩이가 마음을 알아챘어!"
-              : "냠냠, 잘 받아먹었대"}
-        </p>
+        {phase === "listening" ? (
+          // 채영님 개선안(2026-09-18): 대기 중엔 한 줄 고정 대신 여러 문장을 5초 간격으로 전환
+          <RotatingCaption messages={LISTENING_MESSAGES} intervalMs={1300} style={{ fontSize: 14 }} />
+        ) : (
+          <p style={{ fontSize: 14, color: "var(--color-brown)" }}>
+            {phase === "understood" ? "얼룩이가 마음을 알아챘어!" : "냠냠, 잘 받아먹었대"}
+          </p>
+        )}
       </div>
     );
   }
@@ -177,7 +182,7 @@ export default function EmotionCaptureFlow({ userId, ctaLabel = "홈으로", onD
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "var(--space-5)" }}>
         <LetterPaper>
-          <p className="font-hand" style={{ fontSize: 17, lineHeight: 1.7, whiteSpace: "pre-line" }}>
+          <p className="font-letter" style={{ fontSize: 17, lineHeight: 1.7, whiteSpace: "pre-line" }}>
             {result.letter_text}
           </p>
         </LetterPaper>
@@ -234,7 +239,7 @@ const ctaStyle = {
   border: "none",
   background: "var(--color-main-green)",
   color: "var(--color-text)",
-  fontFamily: "var(--font-jua)",
+  fontFamily: "var(--font-heading)",
   fontSize: 15,
   cursor: "pointer",
 } as const;

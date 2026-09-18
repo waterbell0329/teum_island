@@ -41,7 +41,7 @@ export default function Home() {
                 border: "none",
                 background: "var(--color-main-green)",
                 color: "var(--color-text)",
-                fontFamily: "var(--font-jua)",
+                fontFamily: "var(--font-heading)",
                 fontSize: 16,
                 cursor: "pointer",
                 boxShadow: "var(--shadow-soft)",

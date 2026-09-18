@@ -53,7 +53,7 @@ export default function OnboardingPage() {
 
         {step === "tutorial" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <p style={{ textAlign: "center", fontFamily: "var(--font-jua)", fontSize: 14, padding: "var(--space-4)" }}>
+            <p style={{ textAlign: "center", fontFamily: "var(--font-heading)", fontSize: 14, padding: "var(--space-4)" }}>
               첫 먹이를 줘볼까? 오늘 하루는 어땠어?
             </p>
             <EmotionCaptureFlow userId={userId} ctaLabel="다음" onDone={() => setStep("petname")} />
@@ -110,7 +110,7 @@ function NicknameStep({
     <Centered>
       <Logo />
       <Character animationState="idle" size={160} />
-      <p style={{ fontFamily: "var(--font-jua)", fontSize: 15 }}>만나서 반가워! 뭐라고 부르면 될까?</p>
+      <p style={{ fontFamily: "var(--font-heading)", fontSize: 15 }}>만나서 반가워! 뭐라고 부르면 될까?</p>
       <input
         value={nickname}
         onChange={(e) => setNickname(e.target.value)}
@@ -129,7 +129,7 @@ function NicknameStep({
 function IntroStep({ onNext }: { onNext: () => void }) {
   return (
     <Centered>
-      <p style={{ fontFamily: "var(--font-jua)", fontSize: 15, textAlign: "center" }}>
+      <p style={{ fontFamily: "var(--font-heading)", fontSize: 15, textAlign: "center" }}>
         얼룩이가 작은 친구를 데려왔어!
       </p>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
@@ -151,7 +151,7 @@ function PetNameStep({ onSubmit, error }: { onSubmit: (petName: string) => void;
   return (
     <Centered>
       <Character animationState="celebrating" size={170} />
-      <p style={{ fontFamily: "var(--font-jua)", fontSize: 15 }}>맛있게 먹었어! 이 친구 이름은 뭐라고 지어줄까?</p>
+      <p style={{ fontFamily: "var(--font-heading)", fontSize: 15 }}>맛있게 먹었어! 이 친구 이름은 뭐라고 지어줄까?</p>
       <input
         value={petName}
         onChange={(e) => setPetName(e.target.value)}
@@ -173,7 +173,7 @@ const inputStyle = {
   padding: "12px 16px",
   borderRadius: "var(--radius-control)",
   border: "1px solid #E5DCC9",
-  fontFamily: "var(--font-jua)",
+  fontFamily: "var(--font-body)",
   fontSize: 15,
   textAlign: "center",
   boxSizing: "border-box",
@@ -188,7 +188,7 @@ function buttonStyle(active: boolean) {
     border: "none",
     background: active ? "var(--color-main-green)" : "#D8D0C0",
     color: "var(--color-text)",
-    fontFamily: "var(--font-jua)",
+    fontFamily: "var(--font-heading)",
     fontSize: 15,
     cursor: active ? "pointer" : "not-allowed",
   } as const;

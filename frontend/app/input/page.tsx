@@ -34,7 +34,7 @@ function TopBar({ onBack, title }: { onBack: () => void; title: string }) {
       <button onClick={onBack} aria-label="뒤로" style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer" }}>
         ←
       </button>
-      <span style={{ fontFamily: "var(--font-jua)", fontSize: 16 }}>{title}</span>
+      <span style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>{title}</span>
     </div>
   );
 }

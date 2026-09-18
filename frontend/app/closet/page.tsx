@@ -15,7 +15,7 @@ export default function ClosetPage() {
   return (
     <IslandBackground>
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
-        <h1 style={{ fontFamily: "var(--font-jua)", fontSize: 18, padding: "var(--space-4)", margin: 0 }}>옷장</h1>
+        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: 18, padding: "var(--space-4)", margin: 0 }}>옷장</h1>
 
         {level < 1 ? (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>

@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+/* 채영님 폰트 조합 제안 (2026-09-18): 헤딩/버튼/퀘스트는 G마켓 산스 Bold, 편지 본문은
+   마루 부리. 둘 다 구글폰트에 없어서 CDN(jsDelivr가 미러링하는 오픈배포 웹폰트)에서 직접
+   @font-face로 불러옴. Pretendard(UI 본문/라벨용)은 여기서 @import하면 Tailwind v4의
+   @import "tailwindcss" 확장 결과랑 순서가 꼬여서 빌드 에러가 남 -- 그래서 대신
+   app/layout.tsx의 <head>에 <link rel="stylesheet">로 따로 불러옴. */
+@font-face {
+  font-family: "GmarketSans";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/GmarketSans/GmarketSansBold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MaruBuri";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/MaruBuri/MaruBuri-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MaruBuri";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/MaruBuri/MaruBuri-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* 틈 아일랜드 디자인 토큰 (CLAUDE_1.md 디자인 시스템 참고) --------------------- */
 :root {
   --color-main-green: #a8d5ba; /* 세이지 그린 */
@@ -26,24 +53,33 @@
 
   --background: var(--color-bg);
   --foreground: var(--color-text);
+
+  /* 폰트 조합 (2026-09-18 채영님 개선안): 헤딩/버튼/퀘스트=G마켓산스, UI본문/라벨=프리텐다드,
+     편지본문=마루부리, 캐릭터이름/로고는 기존 그대로 손글씨체(Gamja Flower) 유지 */
+  --font-heading: "GmarketSans", var(--font-jua), sans-serif;
+  --font-body: "Pretendard", var(--font-jua), sans-serif;
+  --font-letter: "MaruBuri", var(--font-gamja), cursive;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-jua);
+  --font-sans: var(--font-body);
   --font-hand: var(--font-gamja);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-jua), sans-serif;
+  font-family: var(--font-body);
 }
 
-/* 폰트: 편지본문/캐릭터이름/로고 3곳에만 Gamja Flower, 그 외 전부 Jua (CLAUDE_1.md 참고) */
+/* 편지 본문(마루부리)과 캐릭터이름/로고(손글씨체, 기존 그대로) 전용 클래스 */
 .font-hand {
   font-family: var(--font-gamja), cursive;
+}
+.font-letter {
+  font-family: var(--font-letter);
 }
 
 /* 모바일 웹앱 프레임: 데스크톱에선 430px 폭으로 가운데 정렬, 모바일에선 꽉 채움 */

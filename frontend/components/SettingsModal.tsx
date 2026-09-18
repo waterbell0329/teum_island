@@ -39,7 +39,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--font-jua)", fontSize: 16 }}>설정</span>
+          <span style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>설정</span>
           <button
             onClick={onClose}
             aria-label="닫기"
@@ -74,7 +74,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
             border: "1px solid #E5DCC9",
             background: "#fff",
             color: "var(--color-text)",
-            fontFamily: "var(--font-jua)",
+            fontFamily: "var(--font-heading)",
             fontSize: 15,
             cursor: "pointer",
           }}
