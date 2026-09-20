@@ -30,9 +30,10 @@ export default function Character({ animationState, size = 160, level }: Charact
   const img = getCharacterImageForLevel(level);
 
   // 모든 레벨 사진을 "가장 큰 세로(REFERENCE_NATIVE_HEIGHT)" 기준 동일 배율로 스케일해서,
-  // 레벨업으로 사진이 바뀌어도 캐릭터 크기가 튀지 않게 함. 사진 세로가 컨테이너의 약 92%를
-  // 차지하도록 잡음(하단중앙 정렬 느낌).
-  const scale = (size * 0.92) / REFERENCE_NATIVE_HEIGHT;
+  // 레벨업으로 사진이 바뀌어도 캐릭터 크기가 튀지 않게 함.
+  // 2026-09-20: 캐릭터가 컨테이너를 꽉 채워서 너무 크게 보인다는 피드백 -> 세로 비율을
+  // 낮춰서(72%) 위아래 여백을 확보하고, 컨테이너 정중앙에 오도록 정렬.
+  const scale = (size * 0.72) / REFERENCE_NATIVE_HEIGHT;
   const w = img.w * scale;
   const h = img.h * scale;
 
@@ -56,8 +57,8 @@ export default function Character({ animationState, size = 160, level }: Charact
             transition={{ duration: 0.4, ease: "easeInOut" }}
             style={{
               position: "absolute",
+              // 컨테이너 정중앙 정렬 (박스 가운데 = 50% 지점에 이미지 중심을 맞춤)
               left: "50%",
-              // 하단 여백을 조금 남기고(발이 컨테이너 바닥에 딱 붙지 않게) 아래쪽 정렬
               top: "50%",
               marginLeft: -w / 2,
               marginTop: -h / 2,
