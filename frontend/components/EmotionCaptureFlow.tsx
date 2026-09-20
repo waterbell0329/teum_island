@@ -164,25 +164,40 @@ export default function EmotionCaptureFlow({ userId, ctaLabel = "홈으로", onD
     phase === "writing" ||
     phase === "celebrating"
   ) {
+    // 2026-09-20 흐름 정리: feeding 단계에선 캐릭터/펫을 숨기고 "먹이만" 중앙에 크게
+    // 보여줬다가, writing에서 다시 캐릭터+펫이 나와 편지를 전한다. (예전엔 캐릭터 위에
+    // 먹이가 겹쳐 뜨고 곧바로 사라져서 화면이 어수선했음)
+    const showFood = phase === "feeding";
+
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <Fairy state={fairyState} size={90} />
-
-        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Character animationState={characterState} size={200} level={user?.level} />
-
-          {/* feeding: 마음이 먹이로 바뀌어 캐릭터 앞에 톡 나타났다가, 캐릭터에게 건네짐 */}
-          <AnimatePresence>
-            {phase === "feeding" && result?.emotion && (
+        {/* 캐릭터+펫 무대 vs 먹이 단독을 크로스페이드로 교체 */}
+        <div style={{ position: "relative", width: 200, minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <AnimatePresence mode="wait">
+            {showFood ? (
+              // feeding: 먹이만 딱 중앙에
               <motion.div
-                key="food"
-                initial={{ opacity: 0, scale: 0.3, y: -40 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.5, y: 10 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                style={{ position: "absolute", top: -8 }}
+                key="food-only"
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                <FoodIcon emotion={result.emotion} size={56} />
+                {result?.emotion && <FoodIcon emotion={result.emotion} size={88} />}
+              </motion.div>
+            ) : (
+              // 나머지: 캐릭터 + 펫(얼룩이) 같이
+              <motion.div
+                key="stage"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}
+              >
+                <Fairy state={fairyState} size={90} />
+                <Character animationState={characterState} size={200} level={user?.level} />
               </motion.div>
             )}
           </AnimatePresence>
