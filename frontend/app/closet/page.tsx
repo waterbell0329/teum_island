@@ -7,6 +7,7 @@ import IslandBackground from "@/components/IslandBackground";
 import BottomNav from "@/components/BottomNav";
 import { useUser } from "@/context/UserContext";
 import { getAllOutfits } from "@/lib/outfits";
+import { getCharacterImageForLevel, MAX_LEVEL_IMAGE } from "@/lib/characterLevels";
 
 export default function ClosetPage() {
   const { user } = useUser();
@@ -38,6 +39,12 @@ export default function ClosetPage() {
             {getAllOutfits().map((outfit) => {
               const unlocked = level >= outfit.level;
               const worn = unlocked && level === outfit.level;
+              // 2026-09-20: 레벨 1~6 칸은 옷만 있는 사진 대신 "옷 입은 캐릭터 사진"으로
+              // 보여줌(홈에 뜨는 그 캐릭터 사진과 동일). 7레벨 이상은 기존 옷 사진 그대로.
+              const useCharacterImage = outfit.level <= MAX_LEVEL_IMAGE;
+              const imgSrc = useCharacterImage
+                ? getCharacterImageForLevel(outfit.level).src
+                : outfit.front;
               return (
                 <div
                   key={outfit.slug}
@@ -58,7 +65,7 @@ export default function ClosetPage() {
                     style={{
                       width: 56,
                       height: 56,
-                      backgroundImage: `url(${outfit.front})`,
+                      backgroundImage: `url(${imgSrc})`,
                       backgroundSize: "contain",
                       backgroundRepeat: "no-repeat",
                       backgroundPosition: "center",
