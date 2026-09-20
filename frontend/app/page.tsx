@@ -42,18 +42,17 @@ export default function Home() {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--space-3)" }}>
           {/* 캐릭터 무대: 캐릭터를 작게(야자수 사이에 쏙) + 하단정렬로 두고, 이름표는
-              캐릭터의 두 귀 사이(정수리 위)에 겹치게 배치 (2026-09-20). 캐릭터가
-              heightRatio=0.52로 컨테이너 하단에 그려지므로, 이름표 top을 그 정수리
-              높이에 맞춰 둠 */}
+              캐릭터 귀 끝보다 확실히 위(하늘 공간)에 둬서 안 겹치게 함 (2026-09-20). */}
           <div style={{ position: "relative", width: 320, height: 320 }}>
             {/* 이름표: 흰 알약 배지가 너무 밋밋하다는 피드백 받고 그라데이션+얇은 테두리+
                 작은 잎사귀 포인트로 정리 (2026-09-20) */}
             <div
               style={{
                 position: "absolute",
-                // 두 귀 사이(정수리) 높이. 캐릭터 하단정렬 + heightRatio 0.52 기준으로
-                // 대략 이 지점이 귀 사이에 오도록 맞춤 (실제 화면 보고 미세조정 가능)
-                top: 150,
+                // 캐릭터(heightRatio 0.42, 하단정렬) 귀 끝보다 확실히 위. 캐릭터가
+                // 컨테이너 하단에 작게 그려지므로 귀 끝이 대략 top 175 부근 -> 이름표는
+                // 그보다 위인 95에 둬서 겹치지 않게.
+                top: 95,
                 left: "50%",
                 transform: "translateX(-50%)",
                 zIndex: 3,
@@ -106,7 +105,7 @@ export default function Home() {
             >
               ✦
             </motion.span>
-            <Character animationState="idle" size={320} level={user?.level} heightRatio={0.52} verticalAlign="bottom" />
+            <Character animationState="idle" size={320} level={user?.level} heightRatio={0.42} verticalAlign="bottom" />
           </div>
 
           {loading && <p style={{ fontSize: 13, color: "var(--color-brown)" }}>얼룩이가 정보를 불러오는 중...</p>}
