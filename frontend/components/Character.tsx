@@ -24,18 +24,30 @@ interface CharacterProps {
   foodEmotion?: Emotion;
   /** 유저 레벨. 이 레벨에 맞는 캐릭터 사진(lib/characterLevels.ts)을 통째로 보여줌. */
   level?: number;
+  /** 컨테이너 대비 캐릭터 세로 크기 비율(기본 0.72). 홈에선 더 작게(야자수 사이) 넘김. */
+  heightRatio?: number;
+  /** 컨테이너 안 세로 정렬. "center"(기본) | "bottom"(발을 바닥 쪽에 두고 머리 위 여백 확보). */
+  verticalAlign?: "center" | "bottom";
 }
 
-export default function Character({ animationState, size = 160, level }: CharacterProps) {
+export default function Character({
+  animationState,
+  size = 160,
+  level,
+  heightRatio = 0.72,
+  verticalAlign = "center",
+}: CharacterProps) {
   const img = getCharacterImageForLevel(level);
 
   // 모든 레벨 사진을 "가장 큰 세로(REFERENCE_NATIVE_HEIGHT)" 기준 동일 배율로 스케일해서,
-  // 레벨업으로 사진이 바뀌어도 캐릭터 크기가 튀지 않게 함.
-  // 2026-09-20: 캐릭터가 컨테이너를 꽉 채워서 너무 크게 보인다는 피드백 -> 세로 비율을
-  // 낮춰서(72%) 위아래 여백을 확보하고, 컨테이너 정중앙에 오도록 정렬.
-  const scale = (size * 0.72) / REFERENCE_NATIVE_HEIGHT;
+  // 레벨업으로 사진이 바뀌어도 캐릭터 크기가 튀지 않게 함. heightRatio로 크기 조절.
+  const scale = (size * heightRatio) / REFERENCE_NATIVE_HEIGHT;
   const w = img.w * scale;
   const h = img.h * scale;
+  // bottom 정렬: 발이 컨테이너 하단에서 약간(6%) 위에 오게. center: 정중앙.
+  const topStyle = verticalAlign === "bottom"
+    ? { top: undefined as unknown as string, bottom: `${size * 0.02}px`, marginTop: 0 }
+    : { top: "50%", marginTop: -h / 2 };
 
   return (
     <div style={{ width: size, height: size, position: "relative" }}>
@@ -57,11 +69,10 @@ export default function Character({ animationState, size = 160, level }: Charact
             transition={{ duration: 0.4, ease: "easeInOut" }}
             style={{
               position: "absolute",
-              // 컨테이너 정중앙 정렬 (박스 가운데 = 50% 지점에 이미지 중심을 맞춤)
+              // 좌우는 정중앙, 세로는 verticalAlign에 따라(center/bottom)
               left: "50%",
-              top: "50%",
               marginLeft: -w / 2,
-              marginTop: -h / 2,
+              ...topStyle,
               width: w,
               height: h,
               // 비율 안전장치: 사진마다 원본 비율이 달라도 찌그러지지 않고 레터박스 처리
