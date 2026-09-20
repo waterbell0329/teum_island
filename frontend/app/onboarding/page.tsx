@@ -3,8 +3,9 @@
 // 최초 로그인 유저 온보딩. PROJECT_SUMMARY 3번 섹션 원안대로 단계화:
 //   1) 닉네임 입력 -> 2) 펫+요정 등장 -> 3) 먹이주기 튜토리얼(진짜 첫 기록)
 //   -> 4) 펫 이름짓기 -> 5) complete-onboarding(level 0->1) -> 홈
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import Logo from "@/components/Logo";
 import Character from "@/components/Character";
 import Fairy from "@/components/Fairy";
@@ -37,9 +38,9 @@ export default function OnboardingPage() {
           <NicknameStep
             userId={userId}
             error={error}
-            onNext={async (nickname) => {
+            onNext={async (name) => {
               try {
-                await saveNickname(userId, nickname);
+                await saveNickname(userId, name);
                 setError("");
                 setStep("intro");
               } catch {
@@ -127,14 +128,60 @@ function NicknameStep({
 }
 
 function IntroStep({ onNext }: { onNext: () => void }) {
+  // 2026-09-20: 얼룩이가 먼저 등장 -> 빛 번쩍 -> 그 오른쪽 동일선상에 캐릭터가 등장하는
+  // 연출로 변경 (기존엔 위아래로 쌓아뒀는데, 나란히 놓고 순서를 두는 쪽으로 요청받음).
+  const [phase, setPhase] = useState<"fairy" | "flash" | "reveal">("fairy");
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase("flash"), 700);
+    const t2 = setTimeout(() => setPhase("reveal"), 950);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
   return (
     <Centered>
       <p style={{ fontFamily: "var(--font-heading)", fontSize: 15, textAlign: "center" }}>
-        얼룩이가 작은 친구를 데려왔어!
+        귀여운 새 얼룩이가 작은 친구를 데려왔어!
       </p>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-        <Character animationState="idle" size={170} />
-        <Fairy state="summon" size={80} />
+      <div style={{ position: "relative", width: 280, height: 190, display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4 }}>
+        <Fairy state="summon" size={90} />
+
+        <AnimatePresence>
+          {phase === "flash" && (
+            <motion.div
+              key="flash"
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1.4 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              style={{
+                position: "absolute",
+                right: 20,
+                bottom: 40,
+                width: 90,
+                height: 90,
+                borderRadius: "50%",
+                background: "#fff",
+                zIndex: 3,
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {phase === "reveal" && (
+            <motion.div
+              key="character"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+            >
+              <Character animationState="idle" size={170} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       <p style={{ fontSize: 13, color: "var(--color-brown)", textAlign: "center", maxWidth: 280 }}>
         이 친구는 네가 들려주는 하루 이야기를 먹고 자라. 거친 말은 걸러지고, 마음만 남아서 편지로 돌아올 거야.

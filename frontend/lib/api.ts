@@ -1,5 +1,14 @@
 // 백엔드 fetch 래퍼. backend/app/schemas/emotion.py 와 1:1 대응 (types/emotion.ts 참고).
-import type { EmotionLogCreate, EmotionLogResponse, EmotionLog, User, UserQuest, QuestCompleteResult } from "@/types/emotion";
+import type {
+  EmotionLogCreate,
+  EmotionLogResponse,
+  EmotionLog,
+  User,
+  UserQuest,
+  QuestCompleteResult,
+  UserStats,
+  WeeklySummary,
+} from "@/types/emotion";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -70,4 +79,14 @@ export function completeQuest(questId: string, userId: string): Promise<QuestCom
     method: "POST",
     body: JSON.stringify({ user_id: userId }),
   });
+}
+
+// 설정 화면 "나의 배지" 판정용 (2026-09-19)
+export function getUserStats(userId: string): Promise<UserStats> {
+  return request<UserStats>(`/users/${userId}/stats`);
+}
+
+// 홈 화면 상단 주간 요약 카드용 (2026-09-19)
+export function getWeeklySummary(userId: string): Promise<WeeklySummary> {
+  return request<WeeklySummary>(`/users/${userId}/weekly-summary`);
 }

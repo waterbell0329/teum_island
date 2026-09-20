@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from app.services import db_service
+from app.schemas.emotion import UserStats, WeeklySummary
 
 router = APIRouter()
 
@@ -38,3 +39,15 @@ def complete_onboarding(user_id: str, payload: CompleteOnboardingRequest):
 def recent_logs(user_id: str, limit: int = Query(default=20, le=100)):
     """편지 보관함 목록용 -- 최근 기록 emotion/letter_text/created_at 등 포함해서 그대로 반환."""
     return db_service.get_recent_emotion_logs(user_id, limit=limit)
+
+
+@router.get("/{user_id}/stats", response_model=UserStats)
+def get_stats(user_id: str):
+    """설정 화면 '나의 배지' 판정용 통계 (2026-09-19 신규)."""
+    return db_service.get_user_stats(user_id)
+
+
+@router.get("/{user_id}/weekly-summary", response_model=WeeklySummary)
+def get_weekly_summary(user_id: str):
+    """홈 화면 상단 주간 요약 카드용 (2026-09-19 신규)."""
+    return db_service.get_weekly_summary(user_id)

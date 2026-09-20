@@ -4,7 +4,7 @@ Supabase CRUD 함수 모음
 - 테이블: users, emotion_logs, emotion_profiles, crisis_flags, quests, user_quests
   (food_collection은 "먹이 소모품화" 결정 이후 더 이상 쓰지 않음 — 테이블 삭제 여부는 별도 확인 필요)
 """
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from app.core.supabase_client import get_supabase
 
@@ -142,6 +142,87 @@ def count_emotion_logs(user_id: str) -> int:
         .execute()
     )
     return res.count or 0
+
+
+def get_user_stats(user_id: str) -> dict:
+    """설정 화면 '나의 배지' 판정용 통계 (2026-09-19 신규, /users/{id}/stats).
+    emotion_logs를 한 번만 조회해서 total/연속일수/감정종류를 전부 계산 -- 배지 조건이
+    바뀌어도 새 쿼리 없이 여기 값만으로 client-side에서 판정하게(lib/badges.ts)."""
+    logs = (
+        get_supabase()
+        .table("emotion_logs")
+        .select("emotion, created_at")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+    ).data or []
+
+    total_logs = len(logs)
+    distinct_emotions_count = len({row["emotion"] for row in logs if row.get("emotion")})
+
+    # 연속 기록일수: 오늘(또는 아직 오늘치가 없으면 어제)부터 거꾸로 보면서 하루도
+    # 안 빠지고 이어진 날짜 수만 셈 (하루에 여러 번 기록해도 날짜 단위로만 셈)
+    log_dates = sorted(
+        {datetime.fromisoformat(row["created_at"].replace("Z", "+00:00")).date() for row in logs if row.get("created_at")},
+        reverse=True,
+    )
+    streak = 0
+    if log_dates:
+        today = datetime.now(timezone.utc).date()
+        yesterday = today - timedelta(days=1)
+        if log_dates[0] in (today, yesterday):
+            expected = log_dates[0]  # 오늘치가 아직 없으면 어제부터 거꾸로 셈
+            for d in log_dates:
+                if d == expected:
+                    streak += 1
+                    expected -= timedelta(days=1)
+                elif d < expected:
+                    break
+
+    quests = (
+        get_supabase()
+        .table("user_quests")
+        .select("user_id", count="exact")
+        .eq("user_id", user_id)
+        .eq("completed", True)
+        .execute()
+    )
+    completed_quests_count = quests.count or 0
+
+    user = get_user(user_id)
+    current_level = user["level"] if user else 0
+
+    return {
+        "total_logs": total_logs,
+        "distinct_days_streak": streak,
+        "distinct_emotions_count": distinct_emotions_count,
+        "completed_quests_count": completed_quests_count,
+        "current_level": current_level,
+    }
+
+
+def get_weekly_summary(user_id: str) -> dict:
+    """홈 화면 상단 주간 요약 (2026-09-19 신규, /users/{id}/weekly-summary)."""
+    from collections import Counter
+
+    since = datetime.now(timezone.utc).timestamp() - 7 * 24 * 60 * 60
+    since_iso = datetime.fromtimestamp(since, tz=timezone.utc).isoformat()
+
+    res = (
+        get_supabase()
+        .table("emotion_logs")
+        .select("emotion")
+        .eq("user_id", user_id)
+        .gte("created_at", since_iso)
+        .execute()
+    )
+    rows = res.data or []
+    if not rows:
+        return {"total_count": 0, "top_emotion": None}
+
+    counts = Counter(row["emotion"] for row in rows if row.get("emotion"))
+    top_emotion = counts.most_common(1)[0][0] if counts else None
+    return {"total_count": len(rows), "top_emotion": top_emotion}
 
 
 # ---------- emotion_profiles ----------

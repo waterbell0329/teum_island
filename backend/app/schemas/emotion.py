@@ -45,3 +45,18 @@ class EmotionLogResponse(BaseModel):
     new_level: int
     food_icon: str            # 먹이 아이콘 키 (감정명과 매핑, 소모품이라 저장은 안 함)
     today_quests: list[RoutineQuest]  # 오늘 하루 시작할 가벼운 루틴 퀘스트 2~3개
+
+
+class UserStats(BaseModel):
+    """설정 화면 '나의 배지' 판정용 (2026-09-19 신규)."""
+    total_logs: int
+    distinct_days_streak: int
+    distinct_emotions_count: int
+    completed_quests_count: int
+    current_level: int
+
+
+class WeeklySummary(BaseModel):
+    """홈 화면 상단 주간 요약 카드용 (2026-09-19 신규)."""
+    total_count: int
+    top_emotion: Optional[Emotion] = None

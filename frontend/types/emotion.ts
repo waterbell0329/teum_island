@@ -123,3 +123,18 @@ export interface QuestCompleteResult {
   new_level: number;
   user: User;
 }
+
+// GET /users/{id}/stats 응답 (설정 화면 "나의 배지" 판정용, 2026-09-19)
+export interface UserStats {
+  total_logs: number;
+  distinct_days_streak: number;
+  distinct_emotions_count: number;
+  completed_quests_count: number;
+  current_level: number;
+}
+
+// GET /users/{id}/weekly-summary 응답 (홈 화면 상단 주간 요약 카드용, 2026-09-19)
+export interface WeeklySummary {
+  total_count: number;
+  top_emotion: Emotion | null;
+}

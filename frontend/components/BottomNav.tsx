@@ -9,6 +9,7 @@
 //   top=230, right=1024-765=259, bottom=1024-770=254, left=220
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 const TABS = [
   { href: "/", label: "홈", emoji: "🏠", asset: "/assets/icons/nav-home.png" },
@@ -40,50 +41,50 @@ export default function BottomNav() {
       {TABS.map((tab) => {
         const active = pathname === tab.href;
         return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
-              minWidth: 44,
-              minHeight: 44,
-              justifyContent: "center",
-              color: active ? "var(--color-main-green)" : "var(--color-brown)",
-              textDecoration: "none",
-              fontSize: 12,
-            }}
-          >
-            <span
+          <Link key={tab.href} href={tab.href} style={{ textDecoration: "none" }}>
+            <motion.div
+              whileTap={{ scale: 0.96 }}
               style={{
-                width: 40,
-                height: 28,
-                borderRadius: 999,
-                background: active ? "#EAF3EE" : "transparent",
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
+                gap: 2,
+                minWidth: 44,
+                minHeight: 44,
                 justifyContent: "center",
-                transition: "background 0.2s",
+                color: active ? "var(--color-main-green)" : "var(--color-brown)",
+                fontSize: 12,
               }}
             >
               <span
-                role="img"
-                aria-label={tab.label}
                 style={{
-                  width: 22,
-                  height: 22,
-                  display: "inline-block",
-                  backgroundImage: `url(${tab.asset})`,
-                  backgroundSize: "contain",
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "center",
-                  opacity: active ? 1 : 0.55,
+                  width: 40,
+                  height: 28,
+                  borderRadius: 999,
+                  background: active ? "#EAF3EE" : "transparent",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.2s",
                 }}
-              />
-            </span>
-            {tab.label}
+              >
+                <span
+                  role="img"
+                  aria-label={tab.label}
+                  style={{
+                    width: 22,
+                    height: 22,
+                    display: "inline-block",
+                    backgroundImage: `url(${tab.asset})`,
+                    backgroundSize: "contain",
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "center",
+                    opacity: active ? 1 : 0.55,
+                  }}
+                />
+              </span>
+              {tab.label}
+            </motion.div>
           </Link>
         );
       })}
