@@ -45,9 +45,10 @@ export default function HomeHeader({ nickname }: { nickname: string | null }) {
           style={{
             background: "#F5EFE0",
             border: "none",
-            borderRadius: "50%",
-            width: 34,
-            height: 34,
+            // 2026-09-20: 미리보기 좌상단 'AI' 워터마크를 최대한 가리도록 원형 -> 네모(둥근모서리)
+            borderRadius: 8,
+            width: 36,
+            height: 36,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",

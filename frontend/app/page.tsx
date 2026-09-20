@@ -51,10 +51,10 @@ export default function Home() {
             <div
               style={{
                 position: "absolute",
-                // 캐릭터(heightRatio 0.42, 하단정렬)의 두 귀 사이~머리 위 부근. 이 값은
-                // 레벨별 이미지 비율 차이가 있어 실제 화면 보고 미세조정 전제. (겹침 방지
-                // 위해 몸통까지 내려가지 않는 보수적 위치)
-                top: 175,
+                // 캐릭터 귀 끝보다 확실히 위(캐릭터 위 하늘 공간)에 둬서 절대 안 겹치게.
+                // 캐릭터가 heightRatio 0.42 + 하단정렬이라 귀 끝이 대략 top 175 부근부터
+                // 시작하므로, 이름표는 그보다 위인 100에 배치.
+                top: 100,
                 left: "50%",
                 transform: "translateX(-50%)",
                 zIndex: 3,
