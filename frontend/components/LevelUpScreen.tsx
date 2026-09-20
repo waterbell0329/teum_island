@@ -8,7 +8,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Character from "@/components/Character";
-import { getGrowthStage, representativeLevelForStage } from "@/lib/growthStage";
 
 type Phase = "dark" | "sparkle" | "silhouette" | "flash" | "reveal";
 
@@ -42,8 +41,9 @@ export default function LevelUpScreen({ newLevel, onContinue }: LevelUpScreenPro
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  // 새 레벨이 몇 단계를 건너뛰지 않는 한(보통 1레벨씩 오름) 직전 레벨의 단계를 "이전 옷"으로 씀
-  const prevStageLevel = representativeLevelForStage(getGrowthStage(Math.max(0, newLevel - 1)));
+  // 2026-09-20: 레벨별 캐릭터 사진 방식으로 바뀌어서, "이전 옷"은 그냥 직전 레벨(newLevel-1)
+  // 사진을 실루엣으로 보여주면 됨. (레벨별 사진이 없으면 characterLevels가 1레벨로 폴백)
+  const prevLevel = Math.max(1, newLevel - 1);
   const reveal = phase === "reveal";
 
   return (
@@ -97,7 +97,7 @@ export default function LevelUpScreen({ newLevel, onContinue }: LevelUpScreenPro
                 transition={{ duration: 0.3 }}
                 style={{ position: "absolute", inset: 0, filter: "brightness(0) invert(1)" }}
               >
-                <Character animationState="idle" size={240} level={prevStageLevel} />
+                <Character animationState="idle" size={240} level={prevLevel} />
               </motion.div>
             )}
           </AnimatePresence>
