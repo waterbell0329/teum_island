@@ -18,9 +18,11 @@ interface FairyProps {
   mini?: boolean; // 홈 화면 우상단 상시노출용 미니 아이콘
 }
 
-// 2026-09-14: "펫.png" 원본 시트의 main_bird_illustration 영역을 배경 제거해서 뽑은 완성 그림
+// 2026-09-20: 새(노란 병아리) 일러스트 "얼룩이.png"를 배경(가짜 체크무늬) 제거 + 크롭해서 교체.
+//   원본은 1306x816 RGB(알파 없음, 체크무늬가 픽셀로 박혀있던 가짜 투명)였고,
+//   가장자리 flood fill로 바깥 배경만 투명화(새 안쪽 흰 배/꼬리는 보존) 후 여백 크롭 -> 564x519 RGBA.
 const BODY_ASSET = "/assets/fairy/body.png";
-const NATIVE = { w: 435, h: 400 }; // 크롭된 원본 픽셀 비율 (가로가 살짝 더 김)
+const NATIVE = { w: 564, h: 519 }; // 배경제거+크롭 후 실제 픽셀 비율 (가로가 살짝 더 김)
 
 // 전체를 하나의 단위로 움직이는 모션. framer-motion variant 키를 FairyState 값과
 // 그대로 맞춰놔서 컴포넌트에서 animate={state}만 넘기면 됨.
