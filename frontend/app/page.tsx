@@ -4,11 +4,10 @@
 // 2026-09-19: 캐릭터가 허공에 붕 떠있기만 해서 밋밋하다는 피드백 -> 바닥 그림자로
 // 무대에 서 있는 느낌을 주고, 이름표를 카드형 뱃지로 바꾸고, 은은한 반짝임을 띄워서
 // 실제 게임 화면처럼 레이어감/생동감을 더함.
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Character from "@/components/Character";
-import { getEquippedOutfitLevel } from "@/lib/characterLevels";
 import HomeHeader from "@/components/HomeHeader";
 import LevelGauge from "@/components/LevelGauge";
 import BottomNav from "@/components/BottomNav";
@@ -33,19 +32,7 @@ export default function Home() {
     readSession<PendingLevelUp | null>(PENDING_LEVELUP_KEY, null)
   );
 
-  // 옷장에서 골라 입은 옷(레벨). localStorage는 마운트 후에만 읽을 수 있어 effect로 로드.
-  // 옷장에서 돌아왔을 때 반영되도록 창 포커스/가시성 변화 시 다시 읽음.
-  const [equippedLevel, setEquippedLevel] = useState<number | null>(null);
-  useEffect(() => {
-    const sync = () => setEquippedLevel(getEquippedOutfitLevel());
-    sync();
-    window.addEventListener("focus", sync);
-    document.addEventListener("visibilitychange", sync);
-    return () => {
-      window.removeEventListener("focus", sync);
-      document.removeEventListener("visibilitychange", sync);
-    };
-  }, []);
+
 
   return (
     // 2026-09-19: 구름 그라데이션 배경으로 바꿔봤다가 원래 섬 일러스트가 훨씬 낫다는
@@ -120,7 +107,7 @@ export default function Home() {
             >
               ✦
             </motion.span>
-            <Character animationState="idle" size={320} level={user?.level} equippedLevel={equippedLevel} heightRatio={0.42} verticalAlign="bottom" />
+            <Character animationState="idle" size={320} level={user?.level} heightRatio={0.42} verticalAlign="bottom" />
           </div>
 
           {loading && <p style={{ fontSize: 13, color: "var(--color-brown)" }}>얼룩이가 정보를 불러오는 중...</p>}

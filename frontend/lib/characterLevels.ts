@@ -25,66 +25,16 @@ const LEVEL_IMAGES: Record<number, CharacterLevelImage> = {
 
 export const MAX_LEVEL_IMAGE = 6;
 
-/** 옷장에 보여줄 전체 캐릭터 옷 목록 (레벨 순). */
-export function getAllCharacterOutfits(): { level: number; image: CharacterLevelImage }[] {
-  return Object.keys(LEVEL_IMAGES)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .map((level) => ({ level, image: LEVEL_IMAGES[level] }));
-}
-
 
 
 /**
- * 유저 레벨에 맞는 "기본" 캐릭터 사진(그 레벨에 도달하면 자동으로 입는 옷).
+ * 유저 레벨에 맞는 캐릭터 사진(그 레벨에 도달하면 자동으로 입는 옷).
  * - 레벨 0/1미만 -> 1레벨, 1~6 -> 해당, 7+ -> 6레벨 재사용
  */
 export function getCharacterImageForLevel(level?: number | null): CharacterLevelImage {
   const lv = typeof level === "number" && level >= 1 ? level : 1;
   const clamped = Math.min(lv, MAX_LEVEL_IMAGE);
   return LEVEL_IMAGES[clamped] ?? LEVEL_IMAGES[1];
-}
-
-// --- 옷 착용(갈아입기) 상태 ---------------------------------------------------
-// 옷장에서 "해금한(현재 레벨 이하) 다른 레벨 옷"을 골라 입을 수 있게 함 (3레벨이어도
-// 1레벨 옷 착용 가능). 선택은 localStorage에 저장(백엔드 스키마 안 건드리고 클라 전용).
-const EQUIPPED_KEY = "teum:equipped-outfit-level";
-
-/** 착용 선택 저장. null이면 "레벨 기본 옷"으로 되돌림. */
-export function setEquippedOutfitLevel(level: number | null): void {
-  if (typeof window === "undefined") return;
-  try {
-    if (level == null) window.localStorage.removeItem(EQUIPPED_KEY);
-    else window.localStorage.setItem(EQUIPPED_KEY, String(level));
-  } catch {
-    /* localStorage 접근 불가(프라이빗 모드 등) 시 무시 */
-  }
-}
-
-/** 저장된 착용 선택 레벨(없으면 null). */
-export function getEquippedOutfitLevel(): number | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const v = window.localStorage.getItem(EQUIPPED_KEY);
-    return v == null ? null : Number(v);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * 실제로 화면에 보여줄 캐릭터 사진 결정.
- * - 착용 선택(equippedLevel)이 있고, 그게 현재 레벨로 이미 해금된 것이면 그 옷을 입음.
- * - 아니면(선택 없음/미해금) 레벨 기본 옷.
- */
-export function resolveCharacterImage(userLevel?: number | null, equippedLevel?: number | null): CharacterLevelImage {
-  const lv = typeof userLevel === "number" && userLevel >= 1 ? userLevel : 1;
-  if (equippedLevel != null) {
-    const eq = Math.min(equippedLevel, MAX_LEVEL_IMAGE);
-    // 해금 조건: 착용하려는 옷 레벨 <= 현재 유저 레벨
-    if (eq >= 1 && eq <= lv && LEVEL_IMAGES[eq]) return LEVEL_IMAGES[eq];
-  }
-  return getCharacterImageForLevel(lv);
 }
 
 // 6장 중 가장 큰 세로 픽셀 -- Character.tsx가 이 값을 기준으로 모든 레벨 사진을

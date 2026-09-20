@@ -256,7 +256,21 @@ function SubmitButton({ ready, disabled, onClick }: { ready: boolean; disabled?:
 }
 
 function Label({ children }: { children: ReactNode }) {
-  return <p style={{ fontSize: 13, color: "var(--color-brown)", marginBottom: 8 }}>{children}</p>;
+  // 2026-09-20: 질문 라벨이 배경(섬 일러스트/크림)과 비슷해서 잘 안 보인다는 피드백 ->
+  // 연한 브라운 대신 진한 차콜브라운(--color-text) + 헤딩 폰트/굵기로 대비를 확실히 높임.
+  return (
+    <p
+      style={{
+        fontSize: 14,
+        color: "var(--color-text)",
+        fontFamily: "var(--font-heading)",
+        fontWeight: 700,
+        marginBottom: 8,
+      }}
+    >
+      {children}
+    </p>
+  );
 }
 function Row({ children }: { children: ReactNode }) {
   return <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{children}</div>;
