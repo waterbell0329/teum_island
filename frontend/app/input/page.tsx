@@ -16,7 +16,7 @@ export default function InputPage() {
   return (
     <IslandBackground>
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
-        <TopBar onBack={() => router.push("/")} title="오늘 하루는 어땠냐?" />
+        <TopBar onBack={() => router.push("/")} title="오늘 하루는 어땠어?" />
         <EmotionCaptureFlow
           userId={userId}
           ctaLabel="홈으로"
