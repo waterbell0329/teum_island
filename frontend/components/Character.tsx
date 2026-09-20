@@ -10,7 +10,7 @@
 // 은은한 숨쉬기 모션과 함께 보여준다. animationState prop은 호출부 호환을 위해 남겨두되
 // celebrating일 때 반짝임만 추가로 띄운다(레벨업 축하).
 import { motion, AnimatePresence } from "framer-motion";
-import { getCharacterImageForLevel, REFERENCE_NATIVE_HEIGHT } from "@/lib/characterLevels";
+import { resolveCharacterImage, REFERENCE_NATIVE_HEIGHT } from "@/lib/characterLevels";
 import type { Emotion } from "@/types/emotion";
 
 export type CharacterAnimationState = "idle" | "listening" | "eating" | "celebrating";
@@ -24,6 +24,8 @@ interface CharacterProps {
   foodEmotion?: Emotion;
   /** 유저 레벨. 이 레벨에 맞는 캐릭터 사진(lib/characterLevels.ts)을 통째로 보여줌. */
   level?: number;
+  /** 옷장에서 골라 입은 옷의 레벨(해금 범위 내면 이 옷을 우선 착용). 없으면 레벨 기본 옷. */
+  equippedLevel?: number | null;
   /** 컨테이너 대비 캐릭터 세로 크기 비율(기본 0.72). 홈에선 더 작게(야자수 사이) 넘김. */
   heightRatio?: number;
   /** 컨테이너 안 세로 정렬. "center"(기본) | "bottom"(발을 바닥 쪽에 두고 머리 위 여백 확보). */
@@ -34,10 +36,11 @@ export default function Character({
   animationState,
   size = 160,
   level,
+  equippedLevel,
   heightRatio = 0.72,
   verticalAlign = "center",
 }: CharacterProps) {
-  const img = getCharacterImageForLevel(level);
+  const img = resolveCharacterImage(level, equippedLevel);
 
   // 모든 레벨 사진을 "가장 큰 세로(REFERENCE_NATIVE_HEIGHT)" 기준 동일 배율로 스케일해서,
   // 레벨업으로 사진이 바뀌어도 캐릭터 크기가 튀지 않게 함. heightRatio로 크기 조절.
