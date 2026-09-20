@@ -41,16 +41,19 @@ export default function Home() {
         <WeeklySummaryCard userId={userId} />
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--space-3)" }}>
-          {/* 캐릭터 무대: 훨씬 크게 키우고, 이름표는 머리 바로 위에 겹쳐서 배치 (2026-09-20) --
-              Character 내부는 몸통을 세로 25% 지점부터 그리기 시작하니까, 이름표를 그 위
-              여백(0~25%) 안쪽에 살짝 겹치게 둬서 "머리 바로 위"로 보이게 함 */}
+          {/* 캐릭터 무대: 캐릭터를 작게(야자수 사이에 쏙) + 하단정렬로 두고, 이름표는
+              캐릭터의 두 귀 사이(정수리 위)에 겹치게 배치 (2026-09-20). 캐릭터가
+              heightRatio=0.52로 컨테이너 하단에 그려지므로, 이름표 top을 그 정수리
+              높이에 맞춰 둠 */}
           <div style={{ position: "relative", width: 320, height: 320 }}>
             {/* 이름표: 흰 알약 배지가 너무 밋밋하다는 피드백 받고 그라데이션+얇은 테두리+
                 작은 잎사귀 포인트로 정리 (2026-09-20) */}
             <div
               style={{
                 position: "absolute",
-                top: 34,
+                // 두 귀 사이(정수리) 높이. 캐릭터 하단정렬 + heightRatio 0.52 기준으로
+                // 대략 이 지점이 귀 사이에 오도록 맞춤 (실제 화면 보고 미세조정 가능)
+                top: 150,
                 left: "50%",
                 transform: "translateX(-50%)",
                 zIndex: 3,
@@ -103,7 +106,7 @@ export default function Home() {
             >
               ✦
             </motion.span>
-            <Character animationState="idle" size={320} level={user?.level} />
+            <Character animationState="idle" size={320} level={user?.level} heightRatio={0.52} verticalAlign="bottom" />
           </div>
 
           {loading && <p style={{ fontSize: 13, color: "var(--color-brown)" }}>얼룩이가 정보를 불러오는 중...</p>}
