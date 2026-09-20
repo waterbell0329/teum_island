@@ -4,10 +4,12 @@
 // /input 페이지와 온보딩의 "먹이주기 튜토리얼" 단계가 이 컴포넌트를 공유해서 씀
 // (둘 다 결국 같은 POST /emotion-logs 흐름이라서).
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import InputFlow, { INPUT_DRAFT_KEYS } from "@/components/InputFlow";
 import RotatingCaption from "@/components/RotatingCaption";
 import Character, { type CharacterAnimationState } from "@/components/Character";
 import Fairy, { type FairyState } from "@/components/Fairy";
+import FoodIcon from "@/components/FoodIcon";
 import LetterPaper from "@/components/LetterPaper";
 import { createEmotionLog, ApiError } from "@/lib/api";
 import { clearSession, readSession, writeSession } from "@/lib/sessionDraft";
@@ -16,12 +18,26 @@ import type { EmotionLogCreate, EmotionLogResponse, EmotionLogSubmit } from "@/t
 
 // understood: 요정이 응답을 받고 나서 "알아챘다"는 반응을 짧게 보여주는 단계
 // (채영님이 보내주신 4컷 제스처 참고자료 4번 "경청 후 반응" 반영, 듣기<->전달 사이에 낌)
-type Phase = "form" | "listening" | "understood" | "eating" | "celebrating" | "result" | "crisis" | "error";
+// 2026-09-20 흐름 개편: 캐릭터가 직접 "먹는" 연출(eating) 제거.
+// 대신: 마음이 먹이로 바뀌어 화면에 톡 나타나고(feeding) -> 캐릭터가 그 먹이를 받아
+// 편지를 적고 얼룩이가 가져오는 중(writing) -> 편지 결과(result).
+type Phase =
+  | "form"
+  | "listening"
+  | "understood"
+  | "feeding"
+  | "writing"
+  | "celebrating"
+  | "result"
+  | "crisis"
+  | "error";
 
 const UNDERSTOOD_DURATION_MS = 700;
+const FEEDING_DURATION_MS = 1500; // 먹이가 나타나서 "먹였어요"까지
+const WRITING_DURATION_MS = 1700; // 캐릭터가 편지 적고 얼룩이가 가져오는 중
 
 // 응답 대기 문구 -- 실제로는 편지 풀에서 즉시 서빙돼서 보통 1~2초면 끝나므로 짧은 간격으로 순환
-const LISTENING_MESSAGES = ["얼룩이가 글을 읽고 있어요", "천천히 숨 쉬어도 괜찮아요", "편지를 쓰는 중이에요"];
+const LISTENING_MESSAGES = ["얼룩이가 글을 읽고 있어요", "천천히 숨 쉬어도 괜찮아요", "마음을 살펴보는 중이에요"];
 
 interface EmotionCaptureFlowProps {
   userId: string;
@@ -94,7 +110,7 @@ export default function EmotionCaptureFlow({ userId, ctaLabel = "홈으로", onD
 
       setResult(res);
       setPhase("understood");
-      setTimeout(() => setPhase("eating"), UNDERSTOOD_DURATION_MS);
+      setTimeout(() => setPhase("feeding"), UNDERSTOOD_DURATION_MS);
     } catch (e) {
       setErrorMsg(e instanceof ApiError ? e.message : "얼룩이가 잠깐 딴 데를 봤나봐, 다시 한 번 눌러줄래?");
       setPhase("error");
@@ -108,23 +124,32 @@ export default function EmotionCaptureFlow({ userId, ctaLabel = "홈으로", onD
     if (result) onDone(result);
   }
 
-  function handleEatingComplete() {
-    if (result?.leveled_up) {
-      setPhase("celebrating");
-      setTimeout(() => setPhase("result"), 1300);
-    } else {
-      setPhase("result");
+  // feeding -> writing -> (celebrating) -> result 자동 진행.
+  // 캐릭터가 직접 먹는 연출은 없앴으므로, 각 단계는 타이머로만 넘어간다.
+  useEffect(() => {
+    if (phase === "feeding") {
+      const t = setTimeout(() => setPhase("writing"), FEEDING_DURATION_MS);
+      return () => clearTimeout(t);
     }
-  }
+    if (phase === "writing") {
+      const next = result?.leveled_up ? "celebrating" : "result";
+      const t = setTimeout(() => setPhase(next), WRITING_DURATION_MS);
+      return () => clearTimeout(t);
+    }
+    if (phase === "celebrating") {
+      const t = setTimeout(() => setPhase("result"), 1500);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
-  const characterState: CharacterAnimationState =
-    phase === "eating" ? "eating" : phase === "celebrating" ? "celebrating" : "idle";
+  const characterState: CharacterAnimationState = phase === "celebrating" ? "celebrating" : "idle";
   const fairyState: FairyState =
     phase === "listening"
       ? "listening"
       : phase === "understood"
         ? "understood"
-        : phase === "eating" || phase === "celebrating"
+        : phase === "writing" || phase === "celebrating"
           ? "deliver"
           : "hidden";
 
@@ -132,23 +157,61 @@ export default function EmotionCaptureFlow({ userId, ctaLabel = "홈으로", onD
     return <InputFlow onSubmit={handleSubmit} disabled={submitting} />;
   }
 
-  if (phase === "listening" || phase === "understood" || phase === "eating" || phase === "celebrating") {
+  if (
+    phase === "listening" ||
+    phase === "understood" ||
+    phase === "feeding" ||
+    phase === "writing" ||
+    phase === "celebrating"
+  ) {
+    // 2026-09-20 흐름 정리: feeding 단계에선 캐릭터/펫을 숨기고 "먹이만" 중앙에 크게
+    // 보여줬다가, writing에서 다시 캐릭터+펫이 나와 편지를 전한다. (예전엔 캐릭터 위에
+    // 먹이가 겹쳐 뜨고 곧바로 사라져서 화면이 어수선했음)
+    const showFood = phase === "feeding";
+
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <Fairy state={fairyState} size={90} />
-        <Character
-          animationState={characterState}
-          size={200}
-          onEatingComplete={handleEatingComplete}
-          foodEmotion={result?.emotion}
-          level={user?.level}
-        />
+        {/* 캐릭터+펫 무대 vs 먹이 단독을 크로스페이드로 교체 */}
+        <div style={{ position: "relative", width: 200, minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <AnimatePresence mode="wait">
+            {showFood ? (
+              // feeding: 먹이만 딱 중앙에
+              <motion.div
+                key="food-only"
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                {result?.emotion && <FoodIcon emotion={result.emotion} size={88} />}
+              </motion.div>
+            ) : (
+              // 나머지: 캐릭터 + 펫(얼룩이) 같이
+              <motion.div
+                key="stage"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}
+              >
+                <Fairy state={fairyState} size={90} />
+                <Character animationState={characterState} size={200} level={user?.level} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {phase === "listening" ? (
-          // 채영님 개선안(2026-09-18): 대기 중엔 한 줄 고정 대신 여러 문장을 5초 간격으로 전환
+          // 채영님 개선안(2026-09-18): 대기 중엔 한 줄 고정 대신 여러 문장을 짧은 간격으로 전환
           <RotatingCaption messages={LISTENING_MESSAGES} intervalMs={1300} style={{ fontSize: 14 }} />
         ) : (
-          <p style={{ fontSize: 14, color: "var(--color-brown)" }}>
-            {phase === "understood" ? "얼룩이가 마음을 알아챘어!" : "냠냠, 잘 받아먹었대"}
+          <p style={{ fontSize: 14, color: "var(--color-brown)", textAlign: "center", lineHeight: 1.6, maxWidth: 260 }}>
+            {phase === "understood" && "얼룩이가 마음을 알아챘어!"}
+            {phase === "feeding" && "마음이 먹이가 되어 도착했어요"}
+            {phase === "writing" && "캐릭터가 편지를 적고,\n얼룩이가 편지를 가져오는 중이에요"}
+            {phase === "celebrating" && "축하해요! 새 옷을 입었어요"}
           </p>
         )}
       </div>
